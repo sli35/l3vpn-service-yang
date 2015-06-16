@@ -16,23 +16,31 @@ module ietf-l3vpn-svc {
 	}
 	
 	organization
-	 "IETF xxx Working Group";
+	 "IETF L3SM Working Group";
 	 
 	contact
-		"WG List:	&lt;mailto:@ietf.org&gt;
+		"WG List:	&lt;mailto:l3sm@ietf.org&gt;
 		
 		Editor:		
 
 		";
 	
 	description 
-		"The YANG module defines a generic service configuration model for 
-		Layer 3 VPN common across all of the vendor implementations.";
+		"The YANG module defines a generic service configuration 
+		model for Layer 3 VPN common across all of the vendor 
+		implementations.";
 
-	
+	revision 2015-04-24 {
+		description "
+		* Add encryption parameters
+		* Adding holdtime for BFD.
+		* Add postal address in location
+		";
+		reference "draft-lstd-l3sm-l3vpn-service-yang-00";
+	}
 	revision 2015-02-05 {
 		description "Initial revision.";
-		reference "draft-...";
+		reference "draft-l3vpn-service-yang-00";
 	}
 
 	identity management {
@@ -326,122 +334,134 @@ module ietf-l3vpn-svc {
 	}
 		 
 	
+	/* Groupings */
+	
+	grouping vpn-svc-cfg {
+		description
+		 "Configuration block for l3vpn svc.";
+		 
+		leaf name {
+			type string;
+			description
+			 "Name of the VPN.";
+		}
+		leaf id {
+			type uint32;
+			description
+			"VPN identifier. Local administration meaning.";
+		}
+		leaf customer-name {
+			type string;
+			description
+			 "Name of the customer.";
+		}
+		leaf topology {
+			type identityref {
+				base vpn-topology;
+			}
+			description
+			 "VPN topology.";
+		}
+		
+		list cloud-access {
+			key cloud-identifier;
+			
+			leaf cloud-identifier {
+				type string;
+				description
+				 "Identification of cloud service. Local
+				 admin meaning.";
+			}
+			list authorized-sites {
+				key site-id;
+				
+				leaf site-id {
+					type leafref {
+						path "../../../../sites/site-id";
+					}
+					description
+					 "Site ID.";
+				}
+				description
+				 "List of authorized sites.";
+			}
+			list denied-sites {
+				key site-id;
+				
+				leaf site-id {
+					type leafref {
+						path "../../../../sites/site-id";
+					}
+					description
+					 "Site ID.";
+				}
+				description
+				 "List of denied sites.";
+			}
+			leaf nat-enabled {
+				type boolean;
+				description
+				 "Control if NAT is required or not.";
+			}
+			leaf customer-nat-address {
+				type inet:ipv4-address;
+				description
+				 "NAT address to be used in case of public 
+				 or shared cloud.
+				 This is to be used in case customer is providing 
+				 the public address.";
+			}
+			description
+			 "Cloud access configuration.";
+		}
+		
+		container multicast {
+			leaf-list tree-flavor {
+				type identityref {
+					base multicast-tree-type;
+				}
+				description
+				 "Type of tree to be used.";
+			}
+			container rp {
+				leaf ipv4-address {
+					type inet:ipv4-address;
+					description
+					 "Management address";
+				}
+				leaf ipv6-address {
+					type inet:ipv6-address;
+					description
+					 "Management address";
+				}
+				description
+				 "Defines the address of the RendezvousPoint.";
+			}
+			leaf rp-discovery {
+				type identityref {
+					base multicast-rp-discovery-type;
+				}
+				description
+				 "Type of RP discovery used.";
+			}
+			leaf-list anycast-rp-location {
+				type string;
+				description
+				 "Encodes the location of the RPs in anycast RP
+				 deployment.";
+			}
+			description
+				"Multicast global parameters for the VPN service.";
+		}
+	}
+	
+	/* Main blocks */
 	
 	container l3vpn-svc {
 		list vpn-svc {
 			key name;
 			
-			leaf name {
-				type string;
-				description
-				 "Name of the VPN.";
-			}
-			leaf id {
-				type uint32;
-				description
-				"VPN identifier. Local administration meaning.";
-			}
-			leaf customer-name {
-				type string;
-				description
-				 "Name of the customer.";
-			}
-			leaf topology {
-				type identityref {
-					base vpn-topology;
-				}
-				description
-				 "VPN topology.";
-			}
-			
-			list cloud-access {
-				key cloud-identifier;
-				
-				leaf cloud-identifier {
-					type string;
-					description
-					 "Identification of cloud service. Local
-					 admin meaning.";
-				}
-				list authorized-sites {
-					key site-id;
-					
-					leaf site-id {
-						type leafref {
-							path "../../../../sites/site-id";
-						}
-						description
-						 "Site ID.";
-					}
-					description
-					 "List of authorized sites.";
-				}
-				list denied-sites {
-					key site-id;
-					
-					leaf site-id {
-						type leafref {
-							path "../../../../sites/site-id";
-						}
-						description
-						 "Site ID.";
-					}
-					description
-					 "List of denied sites.";
-				}
-				leaf nat-enabled {
-					type boolean;
-					description
-					 "Control if NAT is required or not.";
-				}
-				leaf customer-nat-address {
-					type inet:ipv4-address;
-					description
-					 "NAT address to be used in case of public or shared cloud.
-					 This is to be used in case customer is providing the public address.";
-				}
-				description
-				 "Cloud access configuration.";
-			}
-			
-			container multicast {
-				leaf-list tree-flavor {
-					type identityref {
-						base multicast-tree-type;
-					}
-					description
-					 "Type of tree to be used.";
-				}
-				container rp {
-					leaf ipv4-address {
-						type inet:ipv4-address;
-						description
-						 "Management address";
-					}
-					leaf ipv6-address {
-						type inet:ipv6-address;
-						description
-						 "Management address";
-					}
-					description
-					 "Defines the address of the RendezvousPoint.";
-				}
-				leaf rp-discovery {
-					type identityref {
-						base multicast-rp-discovery-type;
-					}
-					description
-					 "Type of RP discovery used.";
-				}
-				leaf-list anycast-rp-location {
-					type string;
-					description
-					 "Encodes the location of the RPs in anycast RP
-					 deployment.";
-				}
-				description
-					"Multicast global parameters for the VPN service.";
-			}
+			uses vpn-svc-cfg;
 			
 			description "
 				List of VPN services.
@@ -487,11 +507,61 @@ module ietf-l3vpn-svc {
 					path "../../sites/site-id";
 				}
 				description
-				 "It we would be good to ensure that site-id is template type";
+				 "It we would be good to ensure that 
+				 site-id is template type";
 			}
-			
+			leaf requested-site-start {
+                   type yang:date-and-time;
+                   description
+                    "Optional leaf indicating requested date 
+					and time
+                    when the service at a particular site is 
+					expected
+                    to start";
+               }
+
+               leaf requested-site-stop {
+                   type yang:date-and-time;
+                   description
+                    "Optional leaf indicating requested date 
+					and time
+                    when the service at a particular site is 
+					expected
+                    to stop";
+               }
+
+               leaf actual-site-start {
+                   type yang:date-and-time;
+                   description
+                    "Optional leaf indicating actual date 
+					and time
+                    when the service at a particular site 
+					actually
+                    started";
+               }
+               leaf actual-site-stop {
+                   type yang:date-and-time;
+                   description
+                    "Optional leaf indicating actual date 
+					and time
+                    when the service at a particular site 
+					actually
+                    stopped";
+               }
 			container location {
-				leaf city-code {
+				leaf address {
+					type string;
+					description
+					"Address (number and street)
+					of the site.";
+					
+				}
+				leaf zip-code {
+					type string;
+					description
+					"ZIP code of the site.";
+				}
+				leaf city {
 					type string;
 					description
 					 "City of the site.";
@@ -510,12 +580,14 @@ module ietf-l3vpn-svc {
 					type enumeration {
 						enum "pop-diverse" {
 							description
-							 "The access must use another PoP compared
+							 "The access must use another PoP 
+							 compared
 							 to other accesses in the same group.";
 						}
 						enum "pe-diverse" {
 							description
-							 "The access must use another PE compared
+							 "The access must use another PE 
+							 compared
 							 to other accesses in the same group.";
 						}
 					}
@@ -538,13 +610,72 @@ module ietf-l3vpn-svc {
 						path "../../../sites/site-id";
 					}
 					description
-					 "It we would be good to ensure that site-id is template type";
+					 "It we would be good to ensure that site-id is 
+					 template type";
 				}
 				container authentication {
 					description
 					 "Authentication parameters";
 				}
 				container encryption {
+					leaf enabled {
+						type boolean;
+						description
+						 "If true, access encryption is required.";
+					}
+					leaf layer {
+						type enumeration {
+							enum layer2 {
+								description
+								 "Encryption will occur at layer2.";
+							}
+							enum layer3 {
+								description
+								 "IPSec is requested.";
+							}
+						}
+						description
+						 "Layer on which encryption is applied.";
+					}
+					container encryption-profile {
+						choice profile {
+							case provider-profile {
+								leaf profile-name {
+									type string;
+									description
+									 "Name of the SP profile 
+									 to be applied.";
+								}
+							}
+							case customer-profile {
+								leaf algorithm {
+									type string;
+									description
+									 "Encryption algorithm to 
+									 be used.";
+								}
+								choice key-type {
+									case psk {
+										leaf preshared-key {
+											type string;
+											description
+											 "Key coming from 
+											 customer.";
+										}
+									}
+									case pki {
+									
+									}
+									description
+									 "Type of keys to be used.";
+								}
+							}
+							description
+							 "Choice of profile.";
+						}
+						description
+						 "Profile of encryption to be applied.";
+					}
 					description
 					 "Encryption parameters.";
 				}
@@ -563,7 +694,8 @@ module ietf-l3vpn-svc {
 							base site-availability;
 						}
 						description
-						 "Type of availability, ex : single, backup, loadsharing";
+						 "Type of availability, 
+						 ex : single, backup, loadsharing";
 					}
 					leaf access-type {
 						type identityref {
@@ -604,8 +736,8 @@ module ietf-l3vpn-svc {
 					leaf bearer-reference {
 						type string;
 						description
-						 "This is an internal reference for the service
-						 provider.";
+						 "This is an internal reference for the 
+						 service provider.";
 					}
 					description
 					 "Bearer specific parameters. To be augmented.";
@@ -684,7 +816,8 @@ module ietf-l3vpn-svc {
 								
 								leaf target-site {
 									type leafref {
-										path "../../../../../../../sites/site-id";
+										path "../../../../../../"
+										+"../sites/site-id";
 									}
 									description
 									 "Target site for the sham link
@@ -696,7 +829,8 @@ module ietf-l3vpn-svc {
 									 "Metric of the sham link.";
 								}
 								description
-								 "Creates a shamlink with another site";
+								 "Creates a shamlink with another 
+								 site";
 							}
 							description
 							 "OSPF specific configuration.";
@@ -720,7 +854,8 @@ module ietf-l3vpn-svc {
 						container static {
 							when "type = 'static'" {
 								description
-								 "Only applies when protocol is static.";
+								 "Only applies when protocol 
+								 is static.";
 							}
 							leaf-list address-family {
 								type identityref {
@@ -766,13 +901,43 @@ module ietf-l3vpn-svc {
 							 "VRRP routing specific configuration.";
 						}
 						
-						leaf bfd-enabled {
-							type boolean;
+						container bfd {
+							leaf bfd-enabled {
+								type boolean;
+								description
+								 "BFD activation";
+							}
+							
+							choice holdtime {
+								case profile {
+									leaf profile-name {
+										type string;
+										description
+										 "Service provider well
+										 known profile.";
+									}
+									description
+										 "Service provider well
+										 known profile.";
+								}
+								case fixed {
+									leaf fixed-value {
+										type uint32;
+										units msec;
+										description
+										 "Expected holdtime expressed 
+										 in msec.";
+									}
+								}
+								description
+								 "Choice for holdtime flavor.";
+							}
 							description
-							 "BFD activation";
+							 "Container for BFD.";
 						}
 						description
-						 "List of routing protocols used on the site. Need to be augmented.";
+						 "List of routing protocols used on the site. 
+						 Need to be augmented.";
 					}
 					description
 					 "Defines connection parameters.";
@@ -841,7 +1006,8 @@ module ietf-l3vpn-svc {
 										}
 									}
 									description
-									 "Match on IPv4 protocol field or IPv6 nextheader field.";
+									 "Match on IPv4 protocol field or 
+									 IPv6 nextheader field.";
 								}
 								description
 								 "Describe flow matching criterions.";
@@ -850,8 +1016,10 @@ module ietf-l3vpn-svc {
 							leaf target-class-id {
 								type string;
 								description
-								 "Identification of the class of service.
-								 This identifier is internal to the administration.";
+								 "Identification of the 
+								 class of service.
+								 This identifier is internal to 
+								 the administration.";
 							}
 							
 							description
@@ -872,27 +1040,33 @@ module ietf-l3vpn-svc {
 							leaf class-id {
 								type string;
 								description
-								 "Identification of the class of service.
-								 This identifier is internal to the administration.";
+								 "Identification of the 
+								 class of service.
+								 This identifier is internal to 
+								 the administration.";
 							}
 							leaf rate-limit {
 								type uint8;
 								units percent;
 								description
-								 "To be used if class must be rate limited. Expressed as 
+								 "To be used if class must be rate 
+								 limited. Expressed as 
 								 percentage of the svc-bw.";
 							}
 							leaf priority-level {
 								type uint8;
 								description
-								 "Defines the level of the class in term of priority queueing.
-								  The higher the level is the higher is the priority.";
+								 "Defines the level of the class in 
+								 term of priority queueing.
+								  The higher the level is the higher 
+								  is the priority.";
 							}
 							leaf guaranteed-bw-percent {
 								type uint8;
 								units percent;
 								description
-								 "To be used to define the guaranteed BW in percent of the svc-bw
+								 "To be used to define the guaranteed 
+								 BW in percent of the svc-bw
 								 available at the priority-level.";
 							}
 							description
@@ -905,17 +1079,27 @@ module ietf-l3vpn-svc {
 					 "QoS configuration.";
 				}
 				
-				leaf svc-bandwidth {
-					type uint32;
-					units bps;
-					description
-					 "Service bandwidth of the connection.";
-				}
+				leaf svc-input-bandwidth {
+                       type uint32;
+                       units bps;
+                       description
+                        "From the PE perspective, the service input
+                        bandwidth of the connection.";
+                }
+
+			    leaf svc-output-bandwidth {
+				   type uint32;
+				   units bps;
+				   description
+					"From the PE perspective, the service output
+					bandwidth of the connection.";
+			    }
 				leaf svc-mtu {
 					type uint16;
 					units bytes;
 					description
-					 "MTU at service level.";
+					 "MTU at service level. 
+					 If the service is IP, it refers to the IP MTU.";
 				}
 				
 				container traffic-protection {
@@ -927,12 +1111,14 @@ module ietf-l3vpn-svc {
 					leaf node-local-protection {
 						type boolean;
 						description
-						 "Enables protection against local PE node failure.";
+						 "Enables protection against local 
+						 PE node failure.";
 					}
 					leaf node-global-protection {
 						type boolean;
 						description
-						"Enables protection against remote PE node failure.
+						"Enables protection against remote 
+						PE node failure.
 						This is also called PIC Edge.
 						";
 					}
@@ -951,7 +1137,8 @@ module ietf-l3vpn-svc {
 								description
 									"Use BGP 3107 as signalling 
 									protocol between PE and CE.
-									In this case, bgp must be also configured
+									In this case, bgp must be also 
+									configured
 									as routing-protocol.
 									";
 							}
@@ -960,8 +1147,10 @@ module ietf-l3vpn-svc {
 						 "MPLS signalling type.";
 					}
 					description
-					 "This container is used when customer provides MPLS based services.
-					 This is used in case of Carrier Supporting Carrier.";
+					 "This container is used when customer provides 
+					 MPLS based services.
+					 This is used in case of Carrier 
+					 Supporting Carrier.";
 				}
 				container multicast {
 					leaf site-type {
@@ -976,7 +1165,8 @@ module ietf-l3vpn-svc {
 							}
 							enum source-receiver {
 								description
-								 "The site has both sources & receivers.";
+								 "The site has both 
+								 sources & receivers.";
 							}
 						}
 						description
@@ -1020,20 +1210,14 @@ module ietf-l3vpn-svc {
 			
 			container vpn-policy {
 				container import-policy {
-					list vpn {
-						key vpn;
-						
-						leaf vpn {
-							type leafref {
-								path "../../../../../vpn-svc/name";
-							}
-							description
-							 "Reference to an IPVPN.";
+					leaf-list vpn {
+						type leafref {
+							path "../../../../vpn-svc/name";
 						}
 						description
-						 "List of VPN service reference.";
+						 "Reference to an IPVPN.";
 					}
-					description 
+				description 
 					 "Import policy.";
 				}
 				container export-policy {
@@ -1113,7 +1297,8 @@ module ietf-l3vpn-svc {
 					leaf maximum-routes {
 						type uint32;
 						description
-						 "Maximum prefixes the VRF can accept for this
+						 "Maximum prefixes the VRF can 
+						 accept for this
 						 address-family.";
 					}
 					description
@@ -1159,7 +1344,8 @@ module ietf-l3vpn-svc {
 						 "Transport protocol used on LAN.";
 					}
 					description
-					 "List of customer LAN to be connected directly on the CE.";
+					 "List of customer LAN to be connected 
+					 directly on the CE.";
 				}
 				container cascaded-lan-prefixes {
 					list ipv4-lan-prefixes {
@@ -1173,12 +1359,14 @@ module ietf-l3vpn-svc {
 						leaf lan-tag {
 							type string;
 							description
-							 "Internal tag to be used in vpn policies.";
+							 "Internal tag to be used in vpn 
+							 policies.";
 						}
 						leaf next-hop {
 							type inet:ipv4-address;
 							description
-							 "Nexthop address to use at customer side.";
+							 "Nexthop address to use at customer 
+							 side.";
 						}
 						description "
 							List of LAN prefixes for the site.
@@ -1221,5 +1409,6 @@ module ietf-l3vpn-svc {
 		 "Main container for L3VPN service configuration.";
 	}
 	
+
 	
 }

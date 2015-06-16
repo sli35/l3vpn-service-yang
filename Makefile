@@ -1,4 +1,4 @@
-I_D = draft-l3vpn-service-yang
+I_D = draft-ltsd-l3sm-l3vpn-service-model
 REVNO = 00
 DATE ?= $(shell date +%F)
 MODULES = ietf-l3vpn-svc
