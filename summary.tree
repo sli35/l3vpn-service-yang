@@ -28,19 +28,17 @@ module: ietf-l3vpn-svc
             +--rw site-id                  svc-id
             +--rw requested-site-start?    yang:date-and-time
             +--rw requested-site-stop?     yang:date-and-time
-            +--rw location
-            |  +--rw address?        string
-            |  +--rw zip-code?       string
-            |  +--rw state?          string
-            |  +--rw city?           string
-            |  +--rw country-code?   string
+            +--rw locations
+            |  +--rw location* [location-id]
+            |        ...
+            +--rw devices
+            |  +--rw device* [device-id]
+            |        ...
             +--rw site-diversity {site-diversity}?
             |  +--rw groups
             |        ...
             +--rw management
-            |  +--rw type?                   identityref
-            |  +--rw management-transport?   identityref
-            |  +--rw address?                inet:ip-address
+            |  +--rw type?   identityref
             +--rw vpn-policy-list
             |  +--rw vpn-policy* [vpn-policy-id]
             |        ...
@@ -53,9 +51,6 @@ module: ietf-l3vpn-svc
             |  +--rw encryption {encryption}?
             |        ...
             +--rw service
-            |  +--rw svc-input-bandwidth?    uint32
-            |  +--rw svc-output-bandwidth?   uint32
-            |  +--rw svc-mtu?                uint16
             |  +--rw qos {qos}?
             |  |     ...
             |  +--rw carrierscarrier {carrierscarrier}?

@@ -6,17 +6,17 @@
 %figures;
 <!ENTITY % yang SYSTEM "yang.ent">
 %yang;
-<!ENTITY RFC2119 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml">
-<!ENTITY RFC6020 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6020.xml">
-<!ENTITY RFC4577 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.4577.xml">
-<!ENTITY RFC4110 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.4110.xml">
-<!ENTITY RFC4364 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.4364.xml">
-<!ENTITY RFC4862 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.4862.xml">
-<!ENTITY RFC6241 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6241.xml">
-<!ENTITY RFC6513 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6513.xml">
-<!ENTITY RFC6536 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6536.xml">
-<!ENTITY RFC3688 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3688.xml">
-<!ENTITY RESTCONF SYSTEM "http://www.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-netconf-restconf.xml">
+<!ENTITY RFC2119 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY RFC6020 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6020.xml">
+<!ENTITY RFC4577 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.4577.xml">
+<!ENTITY RFC4110 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.4110.xml">
+<!ENTITY RFC4364 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.4364.xml">
+<!ENTITY RFC4862 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.4862.xml">
+<!ENTITY RFC6241 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6241.xml">
+<!ENTITY RFC6513 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6513.xml">
+<!ENTITY RFC6536 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6536.xml">
+<!ENTITY RFC3688 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.3688.xml">
+<!ENTITY RESTCONF SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-netconf-restconf.xml">
 
 ]>
 
@@ -664,6 +664,9 @@ SiteA --  |   VPN A       |   ---    |    VPN B      | --- SiteB
 		A customer may also requests some premise equipments (CEs) to the service provider through the "devices" container. Requesting a CE implies a provider-managed or co-managed model.
 		A particular device must be ordered to a particular already configured location. This would help the service provider to send the device to the appropriate installation address.
 		In a multilocation site, a customer may for example request a CE for each location on the site where multihoming must be implemented. In the figure above, one device may be requested for Manhattan location and one other for Brooklyn location.		
+		</t>
+		<t>
+		By using devices and locations, the user will be to influence the multihoming scenario he wants to implement : single CE, dual CE ...
 		</t>
 		</section>
 		<section anchor="site-attachment" title="Site network accesses">
