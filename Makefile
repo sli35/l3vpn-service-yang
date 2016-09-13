@@ -1,5 +1,5 @@
-I_D = draft-ltsd-l3sm-l3vpn-service-model
-REVNO = 00
+I_D = draft-ietf-l3sm-l3vpn-service-model
+REVNO = 13
 DATE ?= $(shell date +%F)
 MODULES = ietf-l3vpn-svc
 FIGURES = ietf-l3vpn-svc.tree \
@@ -93,10 +93,10 @@ model.tree: hello.xml
 	pyang $(PYANG_OPTS) -f tree -o $@ -L $<
 
 ietf-l3vpn-svc.tree: $(yams)
-	pyang $(PYANG_OPTS) -f tree -o $@ --tree-depth 8 $<
+	pyang $(PYANG_OPTS) --ietf -f tree -o $@ --tree-depth 14 $<
 
 summary.tree: $(yams)
-	pyang -f tree -o $@ --tree-depth 3 $<
+	pyang -f tree -o $@ --tree-depth 5 $<
 
 clean:
 	@rm -rf *.rng *.rnc *.sch *.dsrl hello.xml model.tree \

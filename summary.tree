@@ -1,37 +1,74 @@
 module: ietf-l3vpn-svc
    +--rw l3vpn-svc
-      +--rw vpn-svc* [name]
-      |  +--rw name             string
-      |  +--rw id?              uint32
-      |  +--rw customer-name?   string
-      |  +--rw topology?        identityref
-      |  +--rw cloud-access* [cloud-identifier]
-      |  |     ...
-      |  +--rw multicast
-      |        ...
-      +--rw sites* [site-id]
-         +--rw template?                        boolean
-         +--rw site-id                          string
-         +--rw native-vpn?                      leafref
-         +--rw site-type?                       identityref
-         +--rw apply-template?                  leafref
-         +--rw location
-         |     ...
-         +--rw site-diversity
-         |     ...
-         +--rw security
-         |     ...
-         +--rw availability
-         |     ...
-         +--rw attachment
-         |     ...
-         +--rw service
-         |     ...
-         +--rw management
-         |     ...
-         +--rw vpn-policy
-         |     ...
-         +--rw maximum-routes
-         |     ...
-         +--rw customer-specific-information
-               ...
+      +--rw vpn-services
+      |  +--rw vpn-svc* [vpn-id]
+      |     +--rw vpn-id                   svc-id
+      |     +--rw customer-name?           string
+      |     +--rw topology?                identityref
+      |     +--rw cloud-accesses
+      |     |  +--rw cloud-access* [cloud-identifier] {cloud-access}?
+      |     |        ...
+      |     +--rw multicast {multicast}?
+      |     |  +--rw enabled?                 boolean
+      |     |  +--rw customer-tree-flavors
+      |     |  |     ...
+      |     |  +--rw rp
+      |     |        ...
+      |     +--rw carrierscarrier?         boolean {carrierscarrier}?
+      |     +--rw transport-constraints {traffic-engineering}?
+      |     |  +--rw unicast-transport-constraints
+      |     |  |     ...
+      |     |  +--rw multicast-transport-constraints {traffic-engineering-multicast}?
+      |     |        ...
+      |     +--rw extranet-vpns {extranet-vpn}?
+      |        +--rw extranet-vpn* [vpn-id]
+      |              ...
+      +--rw sites
+         +--rw site* [site-id]
+            +--rw site-id                  svc-id
+            +--rw requested-site-start?    yang:date-and-time
+            +--rw requested-site-stop?     yang:date-and-time
+            +--rw location
+            |  +--rw address?        string
+            |  +--rw zip-code?       string
+            |  +--rw state?          string
+            |  +--rw city?           string
+            |  +--rw country-code?   string
+            +--rw site-diversity {site-diversity}?
+            |  +--rw groups
+            |        ...
+            +--rw management
+            |  +--rw type?                   identityref
+            |  +--rw management-transport?   identityref
+            |  +--rw address?                inet:ip-address
+            +--rw vpn-policy-list
+            |  +--rw vpn-policy* [vpn-policy-id]
+            |        ...
+            +--rw site-vpn-flavor?         identityref
+            +--rw maximum-routes
+            |  +--rw address-family* [af]
+            |        ...
+            +--rw security
+            |  +--rw authentication
+            |  +--rw encryption {encryption}?
+            |        ...
+            +--rw service
+            |  +--rw svc-input-bandwidth?    uint32
+            |  +--rw svc-output-bandwidth?   uint32
+            |  +--rw svc-mtu?                uint16
+            |  +--rw qos {qos}?
+            |  |     ...
+            |  +--rw carrierscarrier {carrierscarrier}?
+            |  |     ...
+            |  +--rw multicast {multicast}?
+            |        ...
+            +--rw traffic-protection {fast-reroute}?
+            |  +--rw enabled?   boolean
+            +--rw routing-protocols
+            |  +--rw routing-protocol* [type]
+            |        ...
+            +--ro actual-site-start?       yang:date-and-time
+            +--ro actual-site-stop?        yang:date-and-time
+            +--rw site-network-accesses
+               +--rw site-network-access* [site-network-access-id]
+                     ...
