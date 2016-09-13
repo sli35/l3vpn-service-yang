@@ -1,0 +1,3669 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<!DOCTYPE rfc SYSTEM ".tools/schema/rfc2629.dtd" [
+<!ENTITY % netmod SYSTEM ".tools/bplate/netmod.ent">
+%netmod;
+<!ENTITY % figures SYSTEM "figures.ent">
+%figures;
+<!ENTITY % yang SYSTEM "yang.ent">
+%yang;
+<!ENTITY RFC2119 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY RFC6020 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6020.xml">
+<!ENTITY RFC4577 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.4577.xml">
+<!ENTITY RFC4110 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.4110.xml">
+<!ENTITY RFC4364 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.4364.xml">
+<!ENTITY RFC4862 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.4862.xml">
+<!ENTITY RFC6241 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6241.xml">
+<!ENTITY RFC6513 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6513.xml">
+<!ENTITY RFC6536 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6536.xml">
+<!ENTITY RFC3688 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3688.xml">
+<!ENTITY RESTCONF SYSTEM "http://www.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-netconf-restconf.xml">
+
+]>
+
+<?rfc strict="yes" ?>
+<?rfc toc="yes"?>
+<?rfc tocdepth="4"?>
+<?rfc symrefs="yes"?>
+<?rfc sortrefs="yes" ?>
+<?rfc compact="yes" ?>
+<?rfc subcompact="no" ?>
+
+<rfc category="std">
+  <front>
+    <title abbrev="l3vpn-svc-cfg">YANG Data Model for L3VPN service delivery</title>
+    <author fullname="Stephane Litkowski" initials="S" surname="Litkowski">
+      <organization>Orange Business Services</organization>
+      <address>
+        <email>stephane.litkowski@orange.com</email>
+      </address>
+    </author>
+	<author fullname="Rob Shakir" initials="R" surname="Shakir">
+      <organization>Jive Communications</organization>
+      <address>
+        <email>rjs@rob.sh</email>
+      </address>
+    </author>
+	<author fullname="Luis Tomotaki" initials="L" surname="Tomotaki">
+      <organization>Verizon</organization>
+      <address>
+        <email>luis.tomotaki@verizon.com</email>
+      </address>
+    </author>
+	<author fullname="Kenichi Ogaki" initials="K" surname="Ogaki">
+      <organization>KDDI</organization>
+      <address>
+        <email>ke-oogaki@kddi.com</email>
+      </address>
+    </author>
+	<author fullname="Kevin D'Souza" initials="K" surname="D'Souza">
+      <organization>ATT</organization>
+      <address>
+        <email>kd6913@att.com</email>
+      </address>
+    </author>
+    <date year="2015"/>
+    <area/>
+    <workgroup>L3SM Working Group</workgroup>
+
+    <abstract>
+      <t>This document defines a YANG data model that can be used to deliver a
+      Layer 3 Provider Provisioned VPN service. The document is limited to the
+      BGP PE-based VPNs as described in RFC4110 and RFC4364. 
+	  This model is
+      intended to be instantiated at management system to deliver the overall
+      service. This model is not a configuration model to be used directly on
+      network elements. This model provides an abstracted view of the Layer 3
+      IPVPN service configuration components. It will be up to a management
+      system to take this as an input and use specific configurations models
+      to configure the different network elements to deliver the service. How
+      configuration of network elements is done is out of scope of the
+      document. 
+	  </t>
+    </abstract>
+    <note title="Requirements Language">
+      <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+      NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and
+      "OPTIONAL" in this document are to be interpreted as described
+      in <xref target="RFC2119"/>.</t>
+    </note>
+  </front>
+  <middle>
+    <section anchor="introduction" title="Introduction">
+      <t>
+      This document defines a YANG data model for Layer 3 IPVPN service configuration.</t>
+      <section anchor="terminology" title="Terminology">
+        <t>The following terms are defined in <xref target="RFC6241"/> and are not redefined
+        here:<list style="symbols">
+            <t>client</t>
+
+            <t>configuration data</t>
+
+            <t>server</t>
+
+            <t>state data</t>
+          </list></t>
+
+        <t>The following terms are defined in <xref target="RFC6020"/> and are not redefined
+        here:<list style="symbols">
+            <t>augment</t>
+
+            <t>data model</t>
+
+            <t>data node</t>
+          </list></t>
+
+        <t>The terminology for describing YANG data models is found in
+        <xref target="RFC6020"/>.</t>
+      </section>
+	  
+      <section anchor="tree-info" title="Tree diagram">
+        <t>A simplified graphical representation of the data model is
+        presented in <xref target="design"/>.</t>
+
+		  
+	&treesym;
+
+      </section>
+    </section>
+	<section anchor="definitions" title="Definitions">
+	<t>Customer Edge (CE) Device: Equipment that is dedicated to a particular customer and is directly connected (at layer 3) to one or more PE devices via attachment circuits.  A CE is usually located at the customer premises, and is usually dedicated to a single VPN, although it may support multiple VPNs if each one has separate attachment circuits.</t>
+	<t>Provider Edge (PE) Device: Equipment managed by the SP that can support multiple VPNs for different customers, and is directly connected (at layer 3) to one or more CE devices via attachment circuits.  A PE is usually located at an SP point of presence (PoP) and is managed by the SP.</t>
+	<t>PE-Based VPNs: The PE devices know that certain traffic is VPN
+   traffic.  They forward the traffic (through tunnels) based on the
+   destination IP address of the packet, and optionally on based on
+   other information in the IP header of the packet.  The PE devices are
+	themselves the tunnel endpoints.  The tunnels may make use of various
+   encapsulations to send traffic over the SP network (such as, but not
+   restricted to, GRE, IP-in-IP, IPsec, or MPLS tunnels).</t>
+
+
+	</section>
+	<section anchor="service" title="Layer 3 IP VPN service model">
+	<t>
+	A Layer 3 IPVPN service is a collection of sites that are authorized to exchange traffic between each other over a shared IP infrastructure.
+	This layer 3 VPN service model aims at providing a common understanding on how the corresponding IP VPN service is to be deployed over the shared infrastructure.
+	This service model is limited to BGP PE-Based VPNs as described in <xref target="RFC4110"/> and <xref target="RFC4364"/>.
+	</t>
+	</section>
+    
+	<section anchor="howto" title="Service data model usage">
+	<figure>
+	<artwork>
+                
+	     L3VPN-SVC |         
+	       MODEL   |
+		           |
+                +------------------+         +-----+
+                |   Orchestration  | &lt; --- &gt; | OSS |
+                +------------------+         +-----+
+                   |            |
+           +----------------+	|		
+           | Config manager |   |
+           +----------------+   |
+                   |            |
+				   | Netconf/CLI ...
+                   |            |
+     +------------------------------------------------+
+                          Network
+                        
+						+++++++
+                        + AAA +
+                        +++++++				
+
++++++++  Bearer ++++++++             ++++++++       +++++++
++ CEA + ------- + PE A +             + PE B + ----- + CEB +
++++++++  Cnct   ++++++++             ++++++++       +++++++
+
+Site A                                       Site B
+
+	</artwork>
+	</figure>
+	<t>
+	The idea of the L3 IPVPN service model is to propose an abstracted interface to manage configuration of components of a L3VPN service.
+	A typical usage is to use this model as an input for an orchestration layer who will be responsible to translate it to orchestrated configuration of network elements
+	who will be part of the service. The network elements can be routers, but also servers (like AAA), and not limited to these examples. 
+	The configuration of network elements MAY be done by CLI, or by NetConf/RestConf coupled with specific configuration YANG data models (BGP, VRF, BFD ...) or any other way.
+	</t>
+	<t>
+	The usage of this service model is not limited to this example, it can be used by any component of the management system but not directly by network elements.
+	</t>
+	</section>
+	
+	
+
+	
+
+	<section anchor="design" title="Design of the Data Model">
+      <t>The YANG module is divided in three main containers : vpn-services, sites.</t>
+	  <t>The vpn-svc under vpn-services defines global parameters for the VPN service for a specific customer.</t>
+	  <t>
+	  A site is composed of at least one site-network-access and may have multiple site-network-access in case of multihoming. The site-network-access attachment is done through a bearer with a connection (transport protocol) on top.	
+	The bearer refers to properties of the attachment that are below layer 3 while the connection refers to layer 3 protocol oriented properties.
+	The bearer may be allocated dynamically by the service provider and the customer may provide some constraints or parameters to drive the placement.
+	</t>
+	<t>Authorization of traffic exchange is done through what we call a VPN policy or VPN topology defining routing exchange rules between sites.</t>
+      
+	  <t>The figure below describe the overall structure of the 
+      YANG module:</t>
+
+      <figure>
+		&ietf-l3vpn-svc.tree;
+      </figure>
+
+      <section anchor="yang-vpn-global" title="VPN service overview">
+	    <t>
+		The vpn-svc container contains generic information about the VPN service.
+		The vpn-id of the vpn-svc refers to an internal reference for this VPN service,
+		while customer name refers to a more explicit reference to the customer.
+		This identifier is purely internal to the organization responsible for the VPN service.
+		The vpn-id MUST be unique.
+		</t>
+		<section anchor="yang-vpn-global-topology" title="VPN service topology">
+		<t>The type of topology of the VPN is required for configuration. Current proposal supports : any-to-any, hub and spoke (where hubs can exchange traffic), and hub and spoke disjoint (where hubs cannot exchange traffic).
+		New topologies could be added by augmentation. By default, any-to-any topology is used.
+		</t>
+			<section anchor="yang-vpn-global-topology-rt-allocation" title="Route Target allocation">
+			<t>
+			Layer 3 PE-based VPN is built using route-targets as described in <xref target="RFC4364"/>.
+			It is expected management system to allocate automatically set of route-targets upon a VPN service creation request.
+			How management system allocates route-targets is out of scope of the document but multiple ways could be envisaged as described below. 
+			</t>
+			<figure>
+			<artwork>
+                                 Management system
+                  &lt;-------------------------------------------------&gt;
+                                              Request RT			
+                   +-----------------------+  Topo a2a   +----------+
+        RestConf   |                       |  -----&gt;     |          |
+User ------------- | Service Orchestration |             |NetworkOSS|
+        l3vpn-svc  |                       |  &lt;-----     |          |
+          model    +-----------------------+   Response  +----------+
+		                                       RT1,RT2
+			</artwork>
+			<postamble>
+			In the example above, a service orchestration, owning the instantiation of this service model,  
+			request route-targets to the network OSS. Based on the requested VPN topology, the network OSS replies
+			with one or multiple route-targets. The interface between this service orchestration and network OSS is out of scope of this document.
+			</postamble>
+			</figure>
+			<figure>
+			<artwork>
+		
+                   +---------------------------+ 
+        RestConf   |                           |
+User ------------- |   Service Orchestration   |
+        l3vpn-svc  |                           |
+		 model     |                           |
+                   |  RT pool : 10:1-&gt;10:10000 |
+                   |  RT pool : 20:50-&gt;20:5000 |
+                   +---------------------------+
+		                                    
+			</artwork>
+			<postamble>
+			In the example above, a service orchestration, owning the instantiation of this service model,  
+			owns one or more pools of route-target (filled by service provider) that can be allocated. Based on the requested VPN topology, it will allocate one or multiple route-targets from
+			the pool.
+			</postamble>
+			</figure>
+			<t>
+			The mechanism displayed above are just examples and SHOULD NOT be considered as exhaustive list of solutions.
+			</t>
+			</section>
+			<section anchor="yang-vpn-global-topology-a2a" title="Any to any">
+			<figure>
+			<artwork>
++------------------------------------------------------------+
+|  VPN1_Site1 ------ PE1               PE2 ------ VPN1_Site2 |
+|                                                            |
+|  VPN1_Site3 ------ PE3               PE4 ------ VPN1_Site4 |
++------------------------------------------------------------+
+
+            Figure - Any to any VPN topology
+			</artwork>
+			</figure>
+			<t>
+			In the any to any topology, all VPN sites can discuss between each other without any restriction. 
+			It is expected that the management system that owns a any to any IPVPN service request through this model, 
+			needs to assign and then configure the VRF and route-targets on the appropriate PEs.
+			In case of any to any, in general a single route-target is required and every VRF imports and exports this route-target.
+			</t>
+			</section>
+			<section anchor="yang-vpn-global-topology-hs" title="Hub and Spoke">
+			<figure>
+			<artwork>
++-------------------------------------------------------------+
+|   Hub_Site1 ------ PE1               PE2 ------ Spoke_Site1 |
+|                          +----------------------------------+   
+|                          |                           
+|                          +----------------------------------+                  
+|   Hub_Site2 ------ PE3               PE4 ------ Spoke_Site2 |
++-------------------------------------------------------------+
+
+            Figure - Hub and Spoke VPN topology
+			</artwork>
+			</figure>
+			<t>
+			In the hub and spoke topology, all spoke sites can discuss only with Hub sites but not between each other. Hubs can discuss also between each other.
+			It is expected that the management system that owns a any to any IPVPN service request through this model, 
+			needs to assign and then configure the VRF and route-targets on the appropriate PEs.
+			In case of hub and spoke, in general a two route-targets are required (one route-target for Hub routes, one route-target for spoke routes). 
+			A Hub VRF, connecting Hub sites, will export Hub routes with Hub route-target, and will import Spoke routes through Spoke route-target. 
+			It will also import the Hub route-target to allow Hub to Hub communication.
+			A Spoke VRF, connecting Spoke sites, will export Spoke routes with Spoke route-target, and will import Hub routes through Hub route-target.
+			</t>
+			<t>
+			The management system MUST take into account Hub and Spoke connections constraints. For example, if management system decides to mesh a spoke site and a hub site on the same PE, it needs to mesh connections in different VRFs as displayed in the figure below.
+			</t>
+			<figure>
+			<artwork>
+			
+   Hub_Site ------- (VRF_Hub)  PE1
+                              (VRF_Spoke)
+                                /  |
+Spoke_Site1 -------------------+   |
+                                   |
+Spoke_Site2 -----------------------+
+			</artwork>
+			</figure>
+			</section>
+			
+			<section anchor="yang-vpn-global-topology-hsd" title="Hub and Spoke disjoint">
+			<figure>
+			<artwork>
++-------------------------------------------------------------+
+|   Hub_Site1 ------ PE1               PE2 ------ Spoke_Site1 |
++--------------------------+  +-------------------------------+   
+                           |  |
++--------------------------+  +-------------------------------+                  
+|   Hub_Site2 ------ PE3               PE4 ------ Spoke_Site2 |
++-------------------------------------------------------------+
+
+          Figure - Hub and Spoke disjoint VPN topology
+			</artwork>
+			</figure>
+			<t>
+			In the hub and spoke disjoint topology, all spoke sites can discuss only with Hub sites but not between each other. Hubs cannot discuss between each other.
+			It is expected that the management system that owns a any to any IPVPN service request through this model, 
+			needs to assign and then configure the VRF and route-targets on the appropriate PEs.
+			In case of hub and spoke, in general a two route-targets are required (one route-target for Hub routes, one route-target for spoke routes). 
+			A Hub VRF, connecting Hub sites, will export Hub routes with Hub route-target, and will import Spoke routes through Spoke route-target. 
+			A Spoke VRF, connecting Spoke sites, will export Spoke routes with Spoke route-target, and will import Hub routes through Hub route-target.
+			</t>
+			<t>
+			The management system MUST take into account Hub and Spoke connections constraints as in the previous case.
+			</t>
+			<t>
+			Hub and spoke disjoint can also be seen as two hub and spoke VPNs sharing with a common set of spoke sites.</t>
+			
+			</section>
+			
+		</section>
+		<section anchor="yang-vpn-global-cloud-access" title="Cloud access">
+		<t>
+		The proposed model provides cloud access configuration through the cloud-access container. The usage of cloud-access is targeted for public cloud.
+		Internet access can also be considered as a public cloud access service. The cloud-access container provides parameters for network address translation
+		and authorization rules. 
+		</t>
+		<t>
+		Private cloud access may be addressed through NNIs as described in <xref target="interas"/>.
+		</t>
+		<t>
+		A cloud identifier is used to reference the target service. This identifier is local to each administration.
+		</t>
+		<t>
+		If NAT is required to access to the cloud, the nat-enabled leaf MUST be set to true. A NAT address may be provided in customer-nat-address, in case the customer is
+		providing the public IP address for the cloud access. If service provider is providing the NAT address, customer-nat-address is not necessary as it can be picked 
+		from a service provider pool.
+		</t>
+		<t>
+		By default, all sites in the IPVPN MUST be authorized to access to the cloud. In case restrictions are required, a user MAY configure the authorized-sites and denied-sites list.
+		The authorization-sites defines the list of sites authorized for cloud access. The denied-sites defines the list of sites denied for cloud access.
+		The model supports both "deny all except" and "accept all except" authorization.
+		</t>
+		<t>The "deny all except" behavior is obtained by filling only the authorized-sites. All the sites listed will be authorized, all others will be denied.</t>
+		<t>The "accept all except" behavior is obtained by filling only the denied-sites. All the sites listed will be denied, all others will be authorized.</t>
+		<t>Defining both denied-sites and authorized-sites MUST be processed as "deny all except", so the denied-sites will have not effect.</t>
+		<t>
+		How the restrictions will be configured on network elements is out of scope of this document and will be specific to each deployment.
+		</t>
+		<figure>
+		<artwork>
+
+                  IPVPN
+    ++++++++++++++++++++++++++++++++     +++++++++++
+	+             Site 3           + --- +  Cloud1 +
+	+ Site 1                       +     +++++++++++
+	+                              + 
+	+ Site 2                       + --- ++++++++++++
+	+                              +     + Internet +
+	+            Site 4            +     ++++++++++++
+	++++++++++++++++++++++++++++++++
+                 |
+		     ++++++++++
+			 + Cloud2 +
+			 ++++++++++
+
+		</artwork>
+		</figure>
+		<t>
+		In the example above, we may configure the global VPN to access Internet by creating a cloud-access pointing to the cloud identifier for Internet service.
+		No authorized-sites will be configured as all sites are required to access to Internet. NAT-enabled will be set to true and a nat-address will be configured.
+		<figure>
+		<artwork>
+&lt;vpn-svc&gt;
+	&lt;vpn-id&gt;ZKITYHJ054687&lt;/vpn-id&gt;
+	&lt;customer-name&gt;CUSTOMER_1&lt;/customer-name&gt;
+	&lt;topology&gt;any-to-any&lt;/topology&gt;
+	&lt;cloud-accesses&gt;
+	 &lt;cloud-access&gt;
+		&lt;cloud-identifier&gt;51&lt;/cloud-identifier&gt;
+		&lt;nat-enabled&gt;true&lt;/nat-enabled&gt;
+	 &lt;/cloud-access&gt;
+    &lt;/cloud-accesses&gt;
+&lt;/vpn-svc&gt;
+		</artwork>
+		</figure>
+		</t>
+		<t>
+		If Site1 and Site2 requires access to Cloud1, a new cloud-access will be created pointing to the cloud identifier of Cloud1. Authorized sites will be filled with
+		reference to Site1 and Site2.
+		<figure>
+		<artwork>
+&lt;vpn-svc&gt;
+	&lt;vpn-id&gt;12456487&lt;/vpn-id&gt;
+	&lt;customer-name&gt;CUSTOMER_1&lt;/customer-name&gt;
+	&lt;topology&gt;any-to-any&lt;/topology&gt;
+	&lt;cloud-accesses&gt;
+	 &lt;cloud-access&gt;
+		&lt;cloud-identifier&gt;1111111&lt;/cloud-identifier&gt;
+		&lt;authorized-sites&gt;
+		 &lt;authorized-site&gt;
+			&lt;site-id&gt;site1&lt;/site-id&gt;
+			&lt;site-id&gt;site2&lt;/site-id&gt;
+		 &lt;authorized-site&gt;
+		&lt;/authorized-sites&gt;
+	 &lt;cloud-access&gt;
+	&lt;/cloud-accesses&gt;
+&lt;/vpn-svc&gt;
+		</artwork>
+		</figure>
+		</t>
+		<t>
+		If all sites except Site1 requires access to Cloud2, a new cloud-access will be created pointing to the cloud identifier of Cloud2.  denied-sites will be filled with
+		reference to Site1.
+		<figure>
+		<artwork>
+&lt;vpn-svc&gt;
+	&lt;vpn-id&gt;12456487&lt;/vpn-id&gt;
+	&lt;customer-name&gt;CUSTOMER_1&lt;/customer-name&gt;
+	&lt;topology&gt;any-to-any&lt;/topology&gt;
+	&lt;cloud-accesses&gt;
+	 &lt;cloud-access&gt;
+		&lt;cloud-identifier&gt;22222222&lt;/cloud-identifier&gt;
+		&lt;denied-sites&gt;
+		 &lt;denied-site&gt;
+			&lt;site-id&gt;site1&lt;/site-id&gt;
+		 &lt;/denied-site&gt;
+		&lt;/denied-sites&gt;
+	 &lt;/cloud-access&gt;
+	&lt;/cloud-accesses&gt;
+&lt;/vpn-svc&gt;
+		</artwork>
+		</figure>
+		</t>
+		</section>
+		<section anchor="yang-vpn-global-mcast" title="Multicast service">
+		<t>Multicast in IP VPN is described in <xref target="RFC6513"/>.</t>
+		<t>If IPVPN supports multicast service, it is expected to provide inputs on global multicast parameters.</t>
+		<t>The user of this model will need to fill the flavor of trees that will be used by customer within the IPVPN (Customer tree).
+		The proposed model supports ASM, SSM and BiDirectional trees (and can be augmented). Multiple flavors of tree can be supported simultaneously.
+		</t>
+		<figure>
+		<artwork>
+                       (SSM tree)
+ Recv (IGMPv3) -- Site2 ------- PE2
+                                           PE1 --- Site1 --- Source1
+												         \
+                                                          -- Source2
+												 
+						(ASM tree)
+ Recv (IGMPv2) -- Site3 ------- PE3
+ 
+                        (SSM tree)
+ Recv (IGMPv3) -- Site4 ------- PE4
+                                /
+ Recv (IGMPv2) -- Site5 --------
+                        (ASM tree)
+
+		</artwork>
+		</figure>
+		
+		<t>
+		In case of ASM flavor requested, this model requires to fill the rp and rp-discovery parameters. 
+		Multiple RP to group mappings can be created using the rp-group-mappings container. For each mapping, the RP service can be managed by the service provider using the leaf provider-managed/enabled set to true.
+		In case of provider managed RP, user can request for rendez-vous point redundancy and/or optimal traffic delivery. Those parameters will help the service provider to select the appropriate technology to fulfill the 
+		customer service requirement : for instance, in case of request of optimal traffic delivery, service provider may decide to use Anycast-RP or RP-tree to SPT switchover. 
+		</t>
+		<t>
+		In case of customer managed RP, the RP address must be filled in the RP to group mappings using the "rp-address" leaf. This leaf is not needed for provider managed RP.
+		</t>
+		<t>
+		User can define a specific rp-discovery mechanism like : auto-rp, static-rp, bsr-rp modes. By default, model considers static-rp if ASM is requested. A single rp-discovery mechanism is allowed for the VPN.
+		"rp-discovery" can be used for provider and customer managed RPs. In case of provider managed RP, if the user wants to use bsr-rp as discovery protocol, service provider will consider the provider managed rp-group-mappings for bsr-rp. 
+		The service provider will so configure its selected RPs to be bsr-rp-candidates. 
+		In case of customer managed RP and bsr-rp discovery mechanism, the rp-address provided will be considered as bsr-rp candidate.
+		</t>
+		</section>
+		<section anchor="yang-vpn-global-extranet" title="Extranet VPNs">
+		<t>
+		There are some cases where a particular VPN needs to access to resources that are external.
+		The resources may be located in another VPN.
+		</t>
+		<figure>
+		<artwork>
+         
+		    +-----------+              +-----------+
+           /             \            /             \
+SiteA --  |   VPN A       |   ---    |    VPN B      | --- SiteB
+           \             /            \             / (Shared 
+            +-----------+		       +-----------+   resources)
+		
+		</artwork>
+		</figure>
+		<t>
+		In the figure above, VPN B has some resources on Site B that need to be available to some customers/partners.
+		VPN A must be able to access those VPN B resources.
+		</t>
+		<t>
+		Such VPN connection scenario can be achieved by the VPN policy defined in <xref target="site-vpn-policy"/>.
+		But there are some simple cases, where a particular VPN (VPN A) needs to access to all resources in a VPN B.
+		The model provides an easy way to setup this connection using the extranet-vpns container.
+		</t>
+		<t>
+		The extranet-vpns container defines a list of VPNs, a particular VPN wants to access. 
+		The extranet-vpns must be used on "customer" VPNs accessing extranet resources in another VPN.
+		In the figure above, in order to give access for VPN A to VPN B, extranet-vpns container will be configured under VPN A with an entry
+		corresponding to VPN B and there is no service configuration requirement on VPN B.
+		</t>
+		<t>
+		Readers should note that even if there is no configuration requirement on VPN B, if VPN A lists VPN B as extranet, all sites in VPN B will gain access to all sites in VPN A.
+		</t>
+		<t>
+		The site-role leaf defines the role of the local VPN sites in the target extranet VPN topology. Site roles are defined in <xref target="site-role"/>.
+		Based on this, the requirements described in <xref target="site-role"/> regarding the site-role leaf are also applicable here.
+		</t>
+		<t>
+		In the example below, VPN A accesses to VPN B resources through extranet connection, a spoke role is required for VPN A sites, so sites from VPN A 
+		must not be able to communicate between each other through the extranet VPN connection.
+		</t>
+		<figure>
+		<artwork>
+&lt;vpn-svc&gt;
+	&lt;vpn-id&gt;VPNB&lt;/vpn-id&gt;
+	&lt;topology&gt;hub-spoke&lt;/topology&gt;
+&lt;/vpn-svc&gt;
+&lt;vpn-svc&gt;
+	&lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;topology&gt;any-to-any&lt;/topology&gt;
+	&lt;extranet-vpns&gt;
+		&lt;extranet-vpn&gt;
+			&lt;vpn-id&gt;VPNB&lt;/vpn-id&gt;
+			&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+		&lt;/extranet-vpn&gt;
+    &lt;/extranet-vpns&gt;
+&lt;/vpn-svc&gt;
+		</artwork>
+		</figure>
+		
+		<t>
+		This model does not define how the extranet configuration will be achieved.
+		</t>
+		<t>
+		Any more complex VPN connection topology (e.g. only part of sites of VPN A accessing only part of sites of VPN B) needs to be achieved using the
+		vpn attachment defined in <xref target="site-vpn-attachment"/>.
+		</t>
+		</section>
+	  </section>
+
+	  <section anchor="yang-site" title="Site overview">
+		<t>
+		A site represents a connection of a customer location to one or more VPN services.
+		<figure>
+		<artwork>
+		                                          
+                                                 +-------------+
+                                                /               \
+  +------------------+                   +-----|      VPN1       |
+  |                  |                   |      \               /
+  |  New York Office | ----- (site) -----+       +-------------+
+  |                  |                   |       +-------------+
+  +------------------+                   |      /               \
+                                         +-----|      VPN2       |
+                                                \               /
+                                                 +-------------+
+		</artwork>
+		</figure>
+		</t>
+	    <t>
+		A site is composed of some characteristics :
+		<list style="symbols">
+		<t>Unique identifier (site-id) : to uniquely identify the site within the overall network infrastructure. The identifier is a string allowing to any encoding for the local administration of the VPN service.</t>
+		<t>Locations (locations) : site location informations to allow easy retrieval on nearest available resources. A site may be composed of multiple locations.</t>
+		<t>Devices : the customer can request one or more customer premise equipments from the service provider for a particular site.</t>
+		<t>Management (management) : defines the model of management of the site, for example : co-managed, customer managed or provider managed.</t>
+		<t>Site network accesses (site-network-accesses) : defines the list of network accesses associated to the sites and their properties : especially bearer, connection and service parameters.</t>
+		</list>
+		</t>
+		<t>
+		A site-network-access represents an IP logical connection of a site. A site may have multiple site-network-accesses. 
+		<figure>
+		<artwork>
+		                                                                                  
+  +------------------+             Site
+  |                  |-----------------------------------
+  |                  |****** (site-network-access#1) ******
+  |  New York Office |
+  |                  |****** (site-network-access#2) ******
+  |                  |-----------------------------------
+  +------------------+    
+
+		</artwork>
+		</figure>
+		Multiple site-network-accesses are used for instance in case of multihoming. Some other topology cases may also involve multiple site-network-accesses.
+		</t>
+		<t>
+		The site configuration is viewed as a global entity, we assume that it is mostly the role of the management to split the parameters between the different elements within the network.
+		For example, in the case of the site-network-access configuration, the management system needs to split the overall parameters between PE configuration and CE configuration.
+		</t>
+		
+		
+		<section anchor="site-device-location" title="Devices and locations">
+		<t>
+		A site may be composed of multiple locations. All the locations will need to be configured as part of the locations container and list.
+		A typical example of multi-location site is a headquarter in a city composed of multiple building. Those building may be located in different parts of the city and may be linked by intra-city fibers (customer metro network).
+		In such case, when connecting to a VPN service, the customer may want to implement multihoming based on its distributed locations.
+		<figure>
+		<artwork>
+
+    New York Site		
+		 
+  +------------------+             Site
+  | +--------------+ |-----------------------------------
+  | | Manhattan    | |****** (site-network-access#1) ******
+  | +--------------+ |
+  | +--------------+ |
+  | | Brooklyn     | |****** (site-network-access#2) ******  
+  | +--------------+ |
+  |                  |-----------------------------------
+  +------------------+    
+
+		</artwork>
+		</figure>		
+		</t>
+		<t>
+		A customer may also requests some premise equipments (CEs) to the service provider through the "devices" container. Requesting a CE implies a provider-managed or co-managed model.
+		A particular device must be ordered to a particular already configured location. This would help the service provider to send the device to the appropriate installation address.
+		In a multilocation site, a customer may for example request a CE for each location on the site where multihoming must be implemented. In the figure above, one device may be requested for Manhattan location and one other for Brooklyn location.		
+		</t>
+		</section>
+		<section anchor="site-attachment" title="Site network accesses">
+		<t>
+		As mentioned, a site may be multihomed. Each IP network access for a site is defined in the site-network-accesses list.
+		
+		The site-network-access defines how the site is connected on the network and is splitted in three main classes of parameters :
+		<list style="symbols">
+		<t>bearer : defines requirements of the attachment (below Layer 3).</t>
+		<t>connection : defines Layer 3 protocol parameters of the attachment.</t>
+		<t>availability : defines the site availability policy. Availability is defined in <xref target="site-availability"/></t>
+		</list>
+		</t>
+		<t>
+			Some parameters from the site can be configured also at the site-network-access level like : routing, services, security ... Defining parameters only at site level will provide inheritance.
+			If a parameter is configured at both site and access level, the access level parameter MUST override the site level parameter. Those parameters will be described later in the document.
+		</t>
+		<t>
+		The site-network-access has a specific type (site-network-access-type). This documents defines two types :
+			<list style="symbols">
+			<t>point-to-point: describes a point to point connection between the service provider and the customer.</t>
+			<t>multipoint: describes a multipoint connection between the service provider and the customer.</t>
+			</list>
+		The type of site-network-access may have an impact on the parameters offered to the customer, e.g. : a service provider may not offer encryption for multipoint accesses.
+		Deciding what parameter is supported for point-to-point and/or multipoint accesses is up to the provider and is out of scope of this document.
+		Some containers proposed in the model may require extension in order to work properly for multipoint accesses.
+		</t>
+			<section anchor="site-attachment-bearer" title="Bearer">
+			<t>Bearer defines the requirements for the site attachment to the provider network that are below Layer 3.</t>
+			<t>The bearer parameters will help to decide the access media to be used. This is further described in <xref target="site-location-prov-type"/>.</t>
+			</section>
+			<section anchor="site-attachment-conn" title="Connection">
+			<t>The connection defines the protocol parameters of the attachment (IPv4 and IPv6).
+			Depending of the management mode, it refers to the PE-CE addressing or CE to customer LAN addressing. In any case, it describes the provider to customer responsibility boundary.
+				For a customer managed site, it refers to the PE-CE connection. For a provider managed site, it refers to the CE to LAN connection.</t>
+				<section anchor="site-attachment-conn-addressing" title="IP addressing">
+				<t>IP subnet can be configured for either transport protocols. For a dual stack connection, two subnets will be provided, one for each
+				transport layer.</t>
+				<t>The address-allocation-type will help in defining how the address allocation MUST be done.
+				The current model proposes three ways of IP address allocation :
+				<list style="symbols">
+				<t>provider-dhcp : the provider will provide DHCP service for customer equipments, this is applicable to both IPv4 and IPv6 addressing.</t>
+				<t>provider-dhcp-relay : the provider will provide DHCP relay service for customer equipments, this is applicable to both IPv4 and IPv6 addressing. The customer needs to fill DHCP server list to be used.</t>
+				<t>static-address : Addresses will be assigned manually, this is applicable to both IPv4 and IPv6 addressing.</t>
+				<t>slaac : enables stateless address autoconfiguration (<xref target="RFC4862"/>). This is applicable only for IPv6.</t>
+				</list>
+				In the dynamic addressing mechanism, it is expected from service provider to provide at least the IP address, mask and default gateway information.
+				</t>
+				</section>
+				<section anchor="site-attachment-conn-oam" title="OAM">
+				<t>
+				A customer may require a specific IP connectivity fault detection mechanism on the IP connection.
+				The model supports BFD as mechanism proposed to the customer. This can be extended with other mechanisms by augmentation.
+				The provider can propose some profiles to the customer depending of the service level the customer wants to achieve. Profile names must be communicated to the customer. This communication is out of scope of this document.
+				Some fixed values for the holdtime period may also be imposed by the customer if the provider enables it.
+				</t>
+				</section>
+			</section>
+			<section anchor="site-inheritance" title="Inheritance of parameters between site and site-network-access">
+			<t>
+			Some parameters are available both at site level and site-network-access level. Defining a parameter at site level will provide inheritance to all site-network-accesses under the site.
+			If a site-network-access has a parameter configured that is already defined at site level, the site-network-access parameter value will replace the site parameter value.
+			</t>
+			</section>
+		</section>
+		
+	  </section>
+	  
+		<section anchor="site-role" title="Site role">
+		<t>
+		A VPN has a particular topology as described in <xref target="yang-vpn-global-topology"/>.
+		As a consequence, each site belonging to a VPN as a particular role in this topology.
+		The site-role defines the role of the site in a particular VPN topology.
+		</t>
+		<t>
+		In the any-to-any topology, all sites MUST have the same role which is any-to-any-role.
+		</t>
+		<t>
+		In the hub-spoke or hub-spoke-disjoint topology, sites MUST have a hub-role or a spoke-role.
+		</t>
+		</section>
+		
+		<section anchor="site-multiple-vpns" title="Site belonging to multiple VPNs">
+		
+			<section anchor="site-vpn-flavor" title="Site vpn flavor">
+			<t>
+			A site may be part of one or multiple VPNs. The site flavor defines the way the VPN multiplexing is done.
+			The current version of the model supports four flavors:
+			<list style="symbols">
+				<t>site-vpn-flavor-single: the site belongs to only one VPN.</t>
+				<t>site-vpn-flavor-multi: the site belongs to multiple VPNs and all the logical accesses of the sites belongs to the same set of VPNs.</t>
+				<t>site-vpn-flavor-sub: the site belongs to multiple VPNs with multiple logical accesses. Each logical access may map to different VPNs (one or many).</t>
+				<t>site-vpn-flavor-nni: the site represents an option A NNI.</t>
+			</list>
+			</t>
+				<section anchor="site-vpn-flavor-single" title="Single VPN attachment : site-vpn-flavor-single">
+				<t>
+				The figure below describes the single VPN attachment. The site connects to only one VPN.
+				</t>
+		<figure>
+		<artwork>
+		                                           +--------+                                       
++------------------+             Site             /          \
+|                  |-----------------------------|            |
+|                  |***(site-network-access#1)***|    VPN1    |
+|  New York Office |                             |            |
+|                  |***(site-network-access#2)***|            |
+|                  |-----------------------------|            |
++------------------+                              \          /
+                                                   +--------+
+
+		</artwork>
+		</figure>
+				</section>
+				<section anchor="site-vpn-flavor-multi" title="Multi VPN attachment : site-vpn-flavor-multi">
+				<t>
+				The figure below describes the multi VPN attachment. The site connects to multiple VPNs.
+				</t>
+		<figure>
+		<artwork>                                    
+                                                        +---------+
+		                                           +---/----+      \                                        
++------------------+             Site             /   |      \      |
+|                  |--------------------------------- |       |VPNB |
+|                  |***(site-network-access#1)******* |       |     |
+|  New York Office |                             |    |       |     |
+|                  |***(site-network-access#2)*******  \      |    /
+|                  |-----------------------------| VPNA +-----|---+
++------------------+                              \          /
+                                                   +--------+
+
+		</artwork>
+		</figure>
+				<t>
+				In the example above, the New York office is multihomed, both logical accesses are using the same VPN attachment rules.
+				Both logical accesses are so connected to VPNA and VPNB.
+				</t>
+				<t>
+				Reaching VPN A or VPN B from New York office will be based on destination based routing. Having the same destination reachable from the two VPNs may cause 
+				routing troubles. This would be the role of the customer administration to ensure the appropriate mapping of its prefixes in each VPN.
+				</t>
+				</section>
+				<section anchor="site-vpn-flavor-sub-single" title="Sub VPN attachment : site-vpn-flavor-sub">
+				<t>
+				The figure below describes a sub VPN attachment. The site connects to multiple VPNs but each logical access is
+				attached to a particular set of VPN. Typical use case of subVPN is a customer site used by multiple affiliates with 
+				private resources for each affiliates that cannot be shared (communication is prevented between the affiliates).
+				It is similar than having separate sites instead that the customer wants to share some physical components while keeping
+				strong isolation.
+				
+				In the example, the access#1 is attached to VPNB while the access#2 is attached to VPNA.
+				</t>
+		<figure>
+		<artwork>                                    
+
++------------------+         Site                      +--------+
+|                  |----------------------------------/          \
+|                  |****(site-network-access#1)******|    VPNB    |
+|  New York Office |                                  \          /
+|                  |                                   +--------+
+|                  |                                   +--------+
+|                  |                                  /          \
+|                  |****(site-network-access#2)******|    VPNA    |   
+|                  |                                  \          /
+|                  |                                   +--------+  
+|                  |-----------------------------------
++------------------+            
+		</artwork>
+		</figure>
+				<t>
+				Multi-VPN can be implemented in addition to subVPN, as a consequence, each site-network-access can access to multiple VPNs. In the example below,
+				access#1 is mapped to VPNB and VPNC, while access#2 is mapped to VPNA and VPND.
+				</t>
+		<figure>
+		<artwork>                                    
+
+
++------------------+         Site                      +-----+   
+|                  |----------------------------------/      +----+
+|                  |****(site-network-access#1)******| VPNB /       \
+|  New York Office |                                  \     | VPN C  |
+|                  |                                   +----\       /
+|                  |                                         +-----+
+|                  |
+|                  |                                   +------+
+|                  |                                  /       +-----+
+|                  |****(site-network-access#2)******|  VPNA /       \ 
+|                  |                                  \      | VPN D |
+|                  |                                   +------\     /
+|                  |-----------------------------------        +---+
++------------------+            
+		</artwork>
+		</figure>				
+				
+				<t>
+				Multihoming is also possible with subVPN, in this case, site-network-accesses are grouped, and a particular group will access to the same set of VPN.
+				In the example below, access#1 and #2 are part of the same group (multihomed together) and will be mapped to VPN B and C, in addition
+				access#3 and #4 are part of the same group (multihomed together) and will be mapped to VPN A and D.				
+				</t>
+		<figure>
+		<artwork>                                    
+
+
++------------------+         Site                      +-----+   
+|                  |----------------------------------/      +----+
+|                  |****(site-network-access#1)******| VPNB /       \
+|  New York Office |****(site-network-access#2)******\     | VPN C  |
+|                  |                                   +----\       /
+|                  |                                         +-----+
+|                  |
+|                  |                                   +------+
+|                  |                                  /       +-----+
+|                  |****(site-network-access#3)******|  VPNA /       \ 
+|                  |****(site-network-access#4)****** \      | VPN D |
+|                  |                                   +------\     /
+|                  |-----------------------------------        +---+
++------------------+            
+		</artwork>
+		</figure>
+				<t>
+				In term of service configuration, subvpn can be achieved by requesting the site-network-accesses to use the same bearer (see <xref target="access-constraint"/> and <xref target="access-constraint-examples-subvpn"/> for more details).
+				</t>
+				</section>
+				<section anchor="site-vpn-flavor-nni" title="NNI : site-vpn-flavor-nni">
+				<t>
+				Some Network to Network Interface (NNI) may be modeled using the site container (see <xref target="interas-a"/>). Using the site container to model NNI is only one the possible option for NNI (see <xref target="interas"/>). This option is called option A by reference to option A NNI defined in <xref target="RFC4364"/>.
+				It is helpful for the service provider to identify that the requested VPN connection is not a regular site but a NNI as specific default device configuration parameters may be applied in case of NNI (example ACLs, routing policies ...).
+				</t>
+						<figure>
+		<artwork>
+       SP A                                             SP B
+  ---------------------                         --------------------
+ /                     \                       /                    \
+|                       |                     |                      |
+|                   ++++++++ InterAS link ++++++++                   |
+|                   +      +_____________ +      +                   |
+|                   +  (VRF1)--(VPN1)----(VRF1)  +                   |
+|                   + ASBR +              + ASBR +                   |
+|                   +  (VRF2)--(VPN2)----(VRF2)  +                   |
+|                   +      +______________+      +                   |
+|                   ++++++++              ++++++++                   |
+|                       |                     |                      |
+|                       |                     |                      |
+|                       |                     |                      |
+|                   ++++++++ InterAS link ++++++++                   |
+|                   +      +_____________ +      +                   |
+|                   +  (VRF1)--(VPN1)----(VRF1)  +                   |
+|                   + ASBR +              + ASBR +                   |
+|                   +  (VRF2)--(VPN2)----(VRF2)  +                   |
+|                   +      +______________+      +                   |
+|                   ++++++++              ++++++++                   |
+|                       |                     |                      |
+|                       |                     |                      |
+ \                     /                       \                    /
+   --------------------                          -------------------
+
+		</artwork>
+		</figure>
+				<t>
+				The figure above describes an option A NNI scenario that could be modeled using the site container.
+				In order to connect its customer VPN (VPN1 and VPN2) on SP B network, SP A may request creation of some site-network-accesses to SP B.
+				The site-vpn-flavor-nni will be used to inform SP B that this is a NNI and not a regular customer site.
+				The site-vpn-flavor-nni may be multihomed and multiVPN as well.
+				</t>
+				</section>
+			</section>
+		
+			<section anchor="site-vpn-attachment" title="Attaching a site to a VPN">
+			<t>
+			Due to the multiple site vpn flavors, the attachment is done at the site-network-access (logical access) level through the vpn-attachment container.
+			The vpn-attachment container is mandatory.
+			The model provides two ways of attachment :
+				<list style="symbols">
+					<t>Referencing directly the target VPN.</t>
+					<t>Reference a VPN policy for more complex attachments.</t>
+				</list>
+			A choice is implemented to allow user to choose the best fitting flavor.
+			</t>
+				<section anchor="site-vpn-attachment-vpnid" title="Reference a VPN">
+				<t>
+				Referencing a vpn-id provides an easy way to attach a particular logical access to a VPN. This is the best way in case of single VPN attachment or
+				subVPN with single VPN attachment per logical access.
+				When referencing a vpn-id, the site-role must be added to express the role of the site in the target VPN topology.
+				</t>
+				<figure>
+				<artwork>
+&lt;site&gt;
+ &lt;site-id&gt;SITE1&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;LA1&lt;/site-network-access-id&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+  &lt;site-network-access-id&gt;LA2&lt;/site-network-access-id&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNB&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+				</artwork>
+				</figure>
+				<t>
+				The example above describes a subVPN case where a site SITE1 has two logical accesses (LA1 and LA2) with LA1 attached to VPNA and LA2 attached to VPNB.
+				</t>
+				</section>
+				<section anchor="site-vpn-policy" title="VPN policy">
+				<t>The vpn-policy helps to express a multiVPN scenario where a logical access belongs to multiple VPNs.
+				Multiple VPN policy can be created to handle the subVPN case where each logical access is part of a different set of VPNs.</t>
+				<t>
+				As a site can belong to multiple VPNs, the vpn-policy may be composed of multiple entries. A filter can be applied to specify that only some LANs of the site should be part of a particular VPN.
+				Each time a site (or LAN) is attached to a VPN, we must precise its role (site-role) within the targeted VPN topology. 
+				</t>
+				<figure>
+			<artwork>
++--------------------------------------------------------------+
+|  VPN2_Site3 ------ PE7                                       |
++-------------------------+                                    |   
+                          |                                    |
++-------------------------+                                    |
+|  VPN2_Site1 ------ PE3               PE4 ------ VPN2_Site2   |
++----------------------------------+                           |	
+                                   |                           |
++------------------------------------------------------------+ |
+|  VPN3_Site1 ------ PE5           |   PE6 ------ VPN3_Site2 | |
++------------------------------------------------------------+ |
+                                   |                           |
+                                   +---------------------------+
+			</artwork> 
+			</figure>
+				<t>
+				In the example above, VPN3_Site2 is part of two VPNs : VPN3 and VPN2. It will play hub-role in VPN2 and any-to-any role in VPN3.
+				We can express such multiVPN scenario as follows :
+				</t>
+				<figure>
+				<artwork>
+&lt;site&gt;
+ &lt;site-id&gt;VPN3_Site2&lt;/site-id&gt;
+ &lt;vpn-policy-list&gt;
+  &lt;vpn-policy&gt;
+   &lt;vpn-policy-id&gt;POLICY1&lt;/vpn-policy-id&gt;
+   &lt;entries&gt;
+    &lt;id&gt;ENTRY1&lt;/id&gt;
+	&lt;vpn&gt;
+	 &lt;vpn-id&gt;VPN2&lt;/vpn-id&gt;
+	 &lt;site-role&gt;hub-role&lt;/site-role&gt;
+	&lt;/vpn&gt;
+   &lt;/entries&gt;
+   &lt;entries&gt;
+    &lt;id&gt;ENTRY2&lt;/id&gt;
+	&lt;vpn&gt;
+	 &lt;vpn-id&gt;VPN3&lt;/vpn-id&gt;
+	 &lt;site-role&gt;any-to-any-role&lt;/site-role&gt;
+	&lt;/vpn&gt;
+   &lt;/entries&gt;
+  &lt;/vpn-policy&gt;
+ &lt;/vpn-policy-list&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;LA1&lt;/site-network-access-id&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-policy-id&gt;POLICY1&lt;/vpn-policy-id&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;		
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+				</artwork>
+				</figure>
+			
+				<t>Now in case more specific VPN attachment is necessary, filtering can be used. 
+				For example, if LAN1 from VPN3_site2 must be attached to VPN2 as hub and LAN2 must be attached to VPN3, the following configuration can be used :</t>
+				<figure>
+				<artwork>
+&lt;site&gt;
+ &lt;site-id&gt;VPN3_Site2&lt;/site-id&gt;
+ &lt;vpn-policy-list&gt;
+  &lt;vpn-policy&gt;
+   &lt;vpn-policy-id&gt;POLICY1&lt;/vpn-policy-id&gt;
+   &lt;entries&gt;
+    &lt;id&gt;ENTRY1&lt;/id&gt;
+	&lt;filter&gt;
+	 &lt;lan-tag&gt;LAN1&lt;/lan-tag&gt;
+	&lt;/filter&gt;
+	&lt;vpn&gt;
+	 &lt;vpn-id&gt;VPN2&lt;/vpn-id&gt;
+	 &lt;site-role&gt;hub-role&lt;/site-role&gt;
+	&lt;/vpn&gt;
+   &lt;/entries&gt;
+   &lt;entries&gt;
+    &lt;id&gt;ENTRY2&lt;/id&gt;
+	&lt;filter&gt;
+	 &lt;lan-tag&gt;LAN2&lt;/lan-tag&gt;
+	&lt;/filter&gt;
+	&lt;vpn&gt;
+	 &lt;vpn-id&gt;VPN3&lt;/vpn-id&gt;
+	 &lt;site-role&gt;any-to-any-role&lt;/site-role&gt;
+	&lt;/vpn&gt;
+   &lt;/entries&gt;
+  &lt;/vpn-policy&gt;
+ &lt;/vpn-policy-list&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;LA1&lt;/site-network-access-id&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-policy-id&gt;POLICY1&lt;/vpn-policy-id&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;		
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+				</artwork>
+				</figure>
+				
+				</section>
+			</section>
+		</section>
+		<section anchor="site-location-prov" title="Deciding where to connect the site">
+		<t>
+		The management system will have to decide where to connect each site-network-access of a particular site to the provider network (PE, aggregation switch ...).
+		</t>
+		<t>The current model proposes parameters and constraints that will help the management system to decide where to attach the site-network-access. </t>
+		<t>The management system SHOULD honor the customer constraints, if the constraint cannot be filled, the management system MUST not provision the site and SHOULD provide an information to the user.
+		How the information is provided is out of scope of the document. It would then be up to the user to relax the constraint or not.</t>
+		<t>
+		Parameters are just hints for management system for service placement.	
+		</t>
+		<t>
+		In addition to parameters and constraints : the management system decision MAY be based on any other internal constraint that are up to the service provider : least load, distance ...
+
+		</t>
+			<section anchor="site-device" title="Constraint : Device">
+			<t>
+			In case of provider-management or co-management, one or more devices have been ordered by the customer.
+			The customer may decide to force a particular site-network-access to be connected on a particular device he ordered.
+		<figure>
+		<artwork>
+
+    New York Site		
+		 
+  +------------------+             Site
+  | +--------------+ |-----------------------------------
+  | | Manhattan    | |
+  | |           CE1********* (site-network-access#1) ******
+  | +--------------+ |
+  | +--------------+ |
+  | | Brooklyn  CE2********* (site-network-access#2) ******  
+  | +--------------+ |
+  |                  |-----------------------------------
+  +------------------+    
+
+		</artwork>
+		</figure>		
+			In the figure above, the site-network-access#1 is associated to CE1, so the service provider MUST ensure the provisionning of this connection.
+			</t>
+			</section>
+			<section anchor="site-location" title="Constraint/parameter : Site location">
+			<t>
+			The location information provided in this model MAY be used by a management system to decide the target PE to mesh the site. 
+			A particular location must be associated to each site network access when configuring it. 
+			The service provider MUST honor the termination of the access on the location associated with the site network access.
+			<figure>
+			<artwork>
+									 PoP#1 (New York)
+								  +---------+        
+								  |   PE1   |
+			 Site #1 ---...       |   PE2   |
+			(Atlantic City)       |   PE3   |
+								  +---------+
+
+									 PoP#2 (Washington)
+								  +---------+
+								  |   PE4   |
+								  |   PE5   |
+								  |   PE6   |
+								  +---------+
+
+									 PoP#3 (Philadelphia)
+								  +---------+
+								  |   PE7   |
+			 Site #2 ---...       |   PE2   |
+			(Reston)              |   PE9   |
+								  +---------+								  
+		
+			</artwork>
+			</figure>
+			In the example above, the management system may decide to mesh Site #1 on a PE from Philadelphia PoP for distance reason. 
+			It may also take into account resources available on PEs to decide the exact target PE (least load).
+			In case of shortest distance PE used, it may also decide to mesh Site #2 on Washington PoP.
+			</t>
+			<t>
+			In the previous section, we seen that a site-network-access can be associated with a particular device. This device is already associated to a particular location.
+			In case of misconfiguration, a site-network-access may be associated with a device which is not in the same location the site-network-access was bound to. 
+			In such situation, the management system SHOULD return an error and MAY advise the user about the inconsistency.
+			</t>
+			</section>
+			<section anchor="site-location-prov-type" title="Constraint/parameter : access type">
+			<t>
+			The management system will need to elect the access method to connect the site to the customer (for example : PPP over ISDN, xSDL, leased line, Ethernet backhaul ...).
+			The customer may provide some parameters/constraints that will provide hints to the management system.
+			</t>
+			<t>The bearer container information SHOULD be used as first input :
+			<list style="symbols">
+			<t>The "requested-type" provides an information about the media type the customer would like. 
+			If the "strict" leaf is equal to "true", this MUST be considered as a strict constraint, so the management system cannot connect the site with another media type.
+			If the "strict" leaf is equal to "false" (default), if the requested-type cannot be fullfilled, the management system can select another type. The supported media types SHOULD be communicated by
+			the service provider to the customer by a mechanism that is out of scope of the document.</t>
+			<t>
+			The "always-on" leaf defines a strict constraint : if set to "true", the management system MUST elect a media type which is always-on (this means no Dial access type).
+			</t>
+			<t>
+			The "bearer-reference" is used in case the customer has already ordered a network connection to the service provider apart of the IPVPN site and wants to reuse this connection.
+			The string used in an internal reference from the service provider describing the already available connection. This is also a strict requirement that cannot be relaxed.
+			How the reference is given to the customer is out of scope of the document but as a pure example, when the customer ordered the bearer (through a process out of this model), the service provider may had provided the bearer reference
+			that can be used for provisionning services on top.
+			</t>
+			</list>
+			</t>
+			<t>
+			Other parameters like the requested svc-input-bandwidth, svc-output-bandwidth MAY help to decide the access type to be used. Any other internal parameters from the service provider can be used in addition.
+			</t>
+			</section>
+			
+			<section anchor="access-constraint" title="Constraint : access diversity">
+			<t>
+			Each site-network-access may have one or more constraints that would drive the placement of the access. 
+			By, default the model assumes no constraint but is expected allocation of a unique bearer per site-network-access.
+			</t>
+			<t>
+			In order to help the different placement scenarios, a site-network-access may be tagged using one or multiple group identifiers. 
+			The group identifier is a string so can accomodate both explicit naming of a group of sites (e.g. "multi-homed-set1" or "subvpn") or using a numbered id (e.g. 12345678).
+			The meaning of each group-id is local to each customer administrator. And the management system MUST ensure that different customers can use the same group-ids.
+			One or more group-id can also be defined at site-level, as a consequence, all site-network-accesses under the site MUST inherit the group-ids of the site they are belonging to.
+			When, in addition to the site group-ids, some group-ids are defined at site-network-access level, the management system MUST consider the union of all groups (site level and site network access level) for this particular site network access.
+			</t>
+			<t>
+			For a particular currently configured site-network-access, each constraint MUST be expressed against a targeted set of site-network-accesses, the currently configured site-network-access MUST never be taken into account in the targeted set : e.g. "I want my current site-network-access to be not be connected on the same PoP as the site-network-accesses that are part of group 10".
+			The set of site-network-accesses against which the constraint is evaluated can be expressed as a list of groups or all-other-accesses or all-other-groups. "all-other-accesses" means that the current site-network-access constraint MUST be evaluated against all the other site-network-accesses belonging
+			to the current site. "all-other-groups" means that the constraint MUST be evaluated against all groups the current site-network-access is not belonging to.
+			</t>
+			<t>
+			The current model proposes multiple constraint-types : 
+			<list style="symbol">
+			<t>pe-diverse : the current site-network-access MUST not be connected to the same PE as the targeted site-network-accesses.</t>
+			<t>pop-diverse : the current site-network-access MUST not be connected to the same PoP as the targeted site-network-accesses.</t>
+			<t>linecard-diverse : the current site-network-access MUST not be connected to the same linecard as the targeted site-network-accesses.</t>
+			<t>same-pe : the current site-network-access MUST be connected to the same PE as the targeted site-network-accesses.</t>
+			<t>same-bearer : the current site-network-access MUST be connected using the same bearer as the targeted site-network-accesses.</t>
+			</list>
+			Those constraint-types could be extended through augmentation.
+			</t>
+			<t>
+			Each constraint is expressed as "I want my current site-network-access to be &lt;constraint-type&gt; (e.g. pe-diverse, pop-diverse) from those &lt;target&gt; site-network-accesses". In addition, 
+			</t>
+			<t>The group-id used to target some site-network-accesses may be the same as the one used by the current site-network-access. This ease configuration of scenarios where a group of site-network-access has a constraint between each other.
+			As an example if we want a set of sites (site#1 up to #5) to be all connected on a different PE, we can tag them with the same group-id and express a pe-diverse constraint for this group-id.
+			<figure>
+			<artwork>
+&lt;site&gt;
+ &lt;site-id&gt;SITE1&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;10&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pe-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;10&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;		
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+&lt;site&gt;
+ &lt;site-id&gt;SITE2&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;10&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pe-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;10&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;		
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+...
+&lt;site&gt;
+ &lt;site-id&gt;SITE5&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;10&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pe-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;10&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;		
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+		</artwork>
+		</figure>
+			</t>
+			<t>The group-id used to target some site-network-accesses may be also different as the one used by the current site-network-access. This is used to express that a group of site has some constraint against another group of sites, but there may not be constraint inside the group itself.
+			As an example, if we consider a set of 6 sites with two sets and we want to ensure that a site in the first set must be pop-diverse from a site in the second set.</t>
+			<figure>
+			<artwork>
+&lt;site&gt;
+ &lt;site-id&gt;SITE1&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;10&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;20&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;		
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+&lt;site&gt;
+ &lt;site-id&gt;SITE2&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;10&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;20&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;		
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+...
+&lt;site&gt;
+ &lt;site-id&gt;SITE5&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;20&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;10&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;		
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+&lt;site&gt;
+ &lt;site-id&gt;SITE6&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;20&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;10&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;		
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+		</artwork>
+		</figure>
+			
+			</section>
+			<section anchor="access-impossible-placement" title="Impossible access placement">
+			<t>
+			Some impossible placement scenarios may be created through the proposed configuration framework. Impossible scenarios could be too restrictive constraints leading to impossible placement in the network or conflicting constraints that would also lead to impossible placement.
+			An example of conflicting rules would be to ask a site-network-access#1 to be pe-diverse from a site-network-access#2 and to ask at the same time that site-network-access#2 to be on the same PE as site-network-access#1.
+			When the management system cannot place the access, it SHOULD return an error message indicating that placement was not possible.
+			</t>
+			</section>
+			<section anchor="access-constraint-examples" title="Examples of access placement">
+			<t>
+			
+			</t>
+				<section anchor="access-constraint-examples-multihoming" title="Multihoming">
+				<t>
+				The customer wants to create a multihomed site. The site will be composed of two site-network-accesses and the customer wants
+				the two site-network-accesses to be meshed on different PoPs for resiliency purpose.
+				</t>
+			<figure>
+			<artwork>
+									 PoP#1
++-------+								  +---------+
+|       |								  |   PE1   |
+|       |---site_network_access#1 ----    |   PE2   |
+|       |								  |   PE3   |
+|       |								  +---------+
+| Site#1|
+|       |									 PoP#2
+|       |								  +---------+
+|       |								  |   PE4   |
+|       |---site_network_access#2 ----    |   PE5   |
+|       |								  |   PE6   |
+|       |								  +---------+	
++-------+
+			</artwork>
+			</figure>
+				<t>
+				This scenario could be expressed in the following way :
+				</t>
+				<figure>
+					<artwork>
+&lt;site&gt;
+ &lt;site-id&gt;SITE1&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;10&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;20&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;2&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;20&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;10&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+					</artwork>
+				</figure>
+				<t>
+				But it can also be expressed as :
+				</t>
+						<figure>
+					<artwork>
+&lt;site&gt;
+ &lt;site-id&gt;SITE1&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;all-other-accesses/&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;2&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;all-other-accesses/&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+					</artwork>
+				</figure>		
+				</section>
+				<section anchor="access-constraint-examples-site-offload" title="Site offload">
+				<t>
+				The customer has a 6 branch offices in a particular region and he wants to prevent to have all branch offices on the same PE.
+				</t>
+				<t>He wants to express that 3 branch offices cannot be connected on the same linecard. But the other branch offices must be connected on a different PoP.
+				Those other branch offices cannot also be connected on the same linecard.</t>
+			<figure>
+			<artwork>
+
+									 PoP#1
+								  +---------+
+								  |   PE1   |
+	        Office#1 ---...       |   PE2   |
+	        Office#2 ---...       |   PE3   |
+	        Office#3 ---...       |   PE4   |
+	                              +---------+
+	            
+
+									 PoP#2
+								  +---------+
+            Office#4 ---...		  |   PE4   |
+            Office#5 ---...       |   PE5   |
+ 			Office#6 ---...       |   PE6   |
+								  +---------+	
+		
+			</artwork>
+			</figure>
+				<t>
+				This scenario could be expressed in the following way :
+				<list style="symbols">
+				<t>We need to create two sets of sites : set#1 composed of Office#1 up to 3, set#2 composed of Office#4 up to 6.</t>
+				<t>Sites within set#1 must be pop-diverse from sites within set#2 and vice versa.</t>
+				<t>Sites within set#1 must be linecard-diverse from other sites in set#1 (same for set#2).</t>
+				</list>
+				</t>
+				<figure>
+					<artwork>
+&lt;site&gt;
+ &lt;site-id&gt;SITE1&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;10&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;20&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;linecard-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;10&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+&lt;/site&gt;
+&lt;site&gt;
+ &lt;site-id&gt;SITE2&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;10&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;20&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;linecard-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;10&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+&lt;/site&gt;
+&lt;site&gt;
+ &lt;site-id&gt;SITE3&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;10&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;20&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;linecard-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;10&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+
+&lt;site&gt;
+ &lt;site-id&gt;SITE4&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;20&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;10&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;linecard-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;20&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+&lt;/site&gt;
+&lt;site&gt;
+ &lt;site-id&gt;SITE5&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;20&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;10&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;linecard-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;20&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+&lt;/site&gt;
+&lt;site&gt;
+ &lt;site-id&gt;SITE6&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;20&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pop-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;10&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;linecard-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;20&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNA&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+					</artwork>
+				</figure>
+				
+				</section>
+				<section anchor="access-constraint-examples-parallel-links" title="Parallel links">
+				<t>
+				To increase its site bandwidth at a cheaper cost, a customer wants to order to parallel site-network-accesses that will be connected to the same PE.
+				</t>
+				<figure>
+			<artwork>
+
+       *******SNA1**********
+Site 1 *******SNA2**********  PE1
+       
+			</artwork>
+			</figure>
+				<t>
+				This scenario could be expressed in the following way :
+</t>
+					<figure>
+					<artwork>
+&lt;site&gt;
+ &lt;site-id&gt;SITE1&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;PE-linkgrp-1&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;same-pe&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;PE-linkgrp-1&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNB&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;2&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;PE-linkgrp-1&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;same-pe&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;PE-linkgrp-1&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNB&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+
+					</artwork>
+				</figure>
+				</section>
+				
+				<section anchor="access-constraint-examples-subvpn" title="SubVPN with multihoming">
+				<t>
+				A customer has site which is dual-homed, the dual-homing must be done on two different PEs.
+				The customer wants also to implement two subVPNs on those multi-homed accesses.
+				</t>
+				
+			<figure>
+			<artwork>
+
++------------------+         Site                      +-----+   
+|                  |----------------------------------/      +----+
+|                  |****(site-network-access#1)******| VPNB /       \
+|  New York Office |****(site-network-access#2)*************| VPN C  |
+|                  |                                   +----\       /
+|                  |                                         +-----+
+|                  |
+|                  |                                   +------+
+|                  |                                  /       +-----+
+|                  |****(site-network-access#3)******|  VPNB /       \ 
+|                  |****(site-network-access#4)**************| VPN C |
+|                  |                                   +------\     /
+|                  |-----------------------------------        +---+
++------------------+            
+			</artwork>
+			</figure>
+				<t>
+				This scenario could be expressed in the following way :
+				<list style="symbols">
+				<t>The site will have 4 site network accesses (2 subVPN coupled with dual homing).</t>
+				<t>Site-network-access#1 and #3 will correspond to the multihoming of the subVPN B. A PE-diverse constraint is required between them.</t>
+				<t>Site-network-access#2 and #4 will correspond to the multihoming of the subVPN C. A PE-diverse constraint is required between them.</t>
+				<t>To ensure proper usage of the same bearer for the subVPN, site-network-access #1 and #2 must share the same bearer as site-network-access #3 and #4.</t>
+				</list>
+				</t>
+				<figure>
+					<artwork>
+&lt;site&gt;
+ &lt;site-id&gt;SITE1&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;1&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;dual-homed-1&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pe-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;dual-homed-2&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;same-bearer&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;dual-homed-1&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNB&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;2&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;dual-homed-1&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pe-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;dual-homed-2&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;same-bearer&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;dual-homed-1&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNC&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;
+   &lt;site-network-access-id&gt;3&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;dual-homed-2&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pe-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;dual-homed-1&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;same-bearer&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;dual-homed-2&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNB&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;	
+  &lt;site-network-access&gt;
+   &lt;site-network-access-id&gt;4&lt;/site-network-access-id&gt;
+   &lt;access-diversity&gt;
+	&lt;groups&gt;
+	 &lt;group&gt;
+	  &lt;group-id&gt;dual-homed-2&lt;/group-id&gt;
+	 &lt;/group&gt;
+	&lt;/groups&gt;
+	&lt;constraints&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;pe-diverse&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;dual-homed-1&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	 &lt;constraint&gt;
+	  &lt;constraint-type&gt;same-bearer&lt;/constraint-type&gt;
+	  &lt;target&gt;
+	   &lt;group&gt;
+	    &lt;group-id&gt;dual-homed-2&lt;/group-id&gt;
+	   &lt;/group&gt;
+	  &lt;/target&gt;
+	 &lt;/constraint&gt;
+	&lt;/constraints&gt;
+   &lt;/access-diversity&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-id&gt;VPNC&lt;/vpn-id&gt;
+	&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;
+ &lt;/site-network-accesses&gt;
+&lt;/site&gt;
+
+					</artwork>
+				</figure>
+				
+				</section>
+			</section>
+			
+			<section anchor="site-rd-allocation" title="Route Distinguisher and VRF allocation">
+			<t>
+			Route distinguisher is also a critical parameter of PE-based L3VPN as described in <xref target="RFC4364"/> that will allow to distinguish common addressing plans in different VPNs.
+			As for Route-targets, it is expected management system to allocate a VRF on the target PE and a route-distinguisher for this VRF.
+			</t>
+			<t>
+			If a VRF exists on the target PE, and the VRF fulfils the connectivity constraints for the site, there is no need to recreate another VRF and the site
+			MAY be meshed within this existing VRF. How the management system checks that an existing VRF fulfils the connectivity constraints for a site is out of scope of this document.
+			</t>
+			<t>
+			If no VRF exists on the target PE, filling the site constraints, the management system will have to initiate a new VRF creation on the target PE and will have to allocate a new route distinguisher
+			for this new VRF.
+			</t>
+			<t>
+			The management system MAY apply a per-VPN or per-VRF allocation policy for the route-distinguisher depending of the service provider policy. In a per-VPN allocation policy, all VRFs (dispatched on multiple PEs) within a VPN will share the same route distinguisher value.
+			In a per-VRF model, all VRFs will always have a unique route-distinguisher value.
+			Some other allocation policies are also possible, and this document does not restrict the allocation policies to be used.
+			</t>
+			<t>
+			Allocation of route-distinguisher MAY be done in the same way as the route-targets. The example provided in <xref target="yang-vpn-global-topology-rt-allocation"/> could be reused.
+			</t>
+			<t>Note that a service provider MAY decide to configure target PE for automated allocation of route distinguisher. In this case, there will be no need for any backend system to allocate a route-distinguisher value.</t>
+						
+			</section>
+			
+		</section>
+		
+		
+		<section anchor="site-availability" title="Site network access availability">
+			<t>
+			A site may be multihomed, so having multiple site-network-accesses.
+		    Placement constraints defined in previous sections will help to ensure physical diversity.
+			</t>
+			<t>When the site-network-accesses are placed on the network, a customer may want to use a particular routing policy on those accesses.</t>
+			<t>
+			The site-network-access/availability defines parameters for the site redundancy. The access-priority defines a preference for a particular access.
+			This preference is used to model loadbalancing or primary/backup scenario. The highest the access-priority is, and the highest the preference will be.
+			</t>
+			<t>The figure below describes how access-priority attribute can be used.</t>
+			<figure>
+			<artwork>
+
+Hub#1 LAN (Primary/backup)		    Hub#2 LAN (Loadsharing)
+  |                                                  |
+  |     access-priority 1       access-priority 1    |
+  |--- CE1 ------- PE1         PE3 --------- CE3 --- |
+  |                                                  |
+  |                                                  |
+  |--- CE2 ------- PE2         PE4 --------- CE4 --- |
+  |     access-priority 2       access-priority 1    |
+                     
+		  
+                          PE5
+                           |
+                           | 
+                           |
+                          CE5
+						   |
+                      Spoke#1 site (Single-homed)
+			</artwork>
+			</figure>
+			<t>
+			In the figure above, Hub#2 requires loadsharing so all the site-network-accesses must use the same access-priority value. 
+			At the contrary, as Hub#1 requires primary/backup, a higher access-priority will be configured on the primary access.
+			</t>
+			
+			<t>
+			More complex scenario can be modeled. Let's consider a Hub site with 5 accesses to the network (A1,A2,A3,A4,A5). The customer wants to loadshare traffic on A1,A2 in the nominal situation.
+			If A1 and A2 fails, he wants to loadshare traffic on A3 and A4, and finally if A1 to A4 are down, he wants to use A5.
+			We can model it easily by associating the following access-priorities : A1=100, A2=100, A3=50, A4=50, A5=10.
+			</t>
+			<t>
+			The access-priority has some limitation. A scenario like the previous one with 5 accesses but with the constraint of having traffic loadshared between A3 and A4 in case of A1 OR A2 being down is not achievable.
+			But the authors consider that the access-priority covers most of the deployment use cases and the model can still be extended by augmentation to support new use cases.
+			</t>
+			</section>
+				<section anchor="site-svc-frr" title="Traffic protection">
+				<t>
+				The service model supports the ability to protect traffic for the site. 
+				Protection provides a better availability to multihoming by, for example, using local-repair techniques in case of failures.
+				The associated level of service guarantee would be based on an agreement between customer and service provider and is out of scope of this document.
+				</t>
+				<figure>
+				<artwork>
+			
+		
+		
+	Site#1                            Site#2
+CE1 ----- PE1 -- P1            P3 -- PE3 ---- CE3
+ |                              |             |
+ |                              |             |
+CE2 ----- PE2 -- P2            P4 -- PE4 ---- CE4 
+          /
+         /
+CE5 ----+
+   Site#3
+				</artwork>
+				</figure>
+				
+				<t>
+				In the figure above, we consider an IPVPN service with three sites including two dual homed sites (site#1 and #2). 
+				For dual homed sites, we consider PE1-CE1 and PE3-CE3 as primary, and PE2-CE2,PE4-CE4 as backup for the example (even if protection also applies to loadsharing scenarios.)
+				</t>
+				<t>
+				In order to protect Site#2 against a failure, user may set the enabled leaf of traffic-protection to true on the site-network-accesses of site#2.
+				How the traffic protection will be implemented is out of scope of the document.
+				But as an example, in such case, if we consider traffic coming from a remote site (site#1 or site#3), primary path is to use PE3 as egress PE. 
+				PE3 may have preprogrammed a backup forwarding entry pointing to backup path (through PE4-CE4) for all prefixes going through PE3-CE3 link.
+				How backup path is computed is out of scope of the document.
+				When PE3-CE3 link fails, traffic is still received by PE3 but PE3 switch automatically traffic to the backup entry, path will so be PE1-P1-(...)-P3-PE3-PE4-CE4 until remote PEs reconverge and use PE4 as egress PE.
+				</t>
+				</section>
+			
+		
+		<section anchor="site-security" title="Security">
+		<t>
+		Security container defines customer specific security parameters for the site.
+		</t>
+			<section anchor="site-security-authentication" title="Authentication">
+			<t>
+			The current model does not support any authentication parameters, but such parameters may be added in the authentication container through augmentation.
+			
+			</t>
+			</section>
+			<section anchor="site-security-encryption" title="Encryption">
+			<t>
+			Encryption can be requested on the connection. It may be performed at layer 2 or layer 3 by selecting the appropriate enumeration
+			in "layer" leaf.
+			The encryption profile can be a service provider defined profile or customer specific.
+			</t>
+			</section>
+		
+		</section>
+		<section anchor="site-management" title="Management">
+		<t>The model proposes three types of common management options :
+		<list style="symbols">	
+		<t>provider-managed : the CE router is managed only by the provider. In this model, the responsibility boundary between SP and customer is between CE and customer network.</t>
+		<t>customer-managed : the CE router is managed only by the customer. In this model, the responsibility boundary between SP and customer is between PE and CE.</t>
+		<t>co-managed : the CE router is primarly managed by the provider and in addition SP lets customer accessing the CE for some configuration/monitoring purpose.
+		In the co-managed mode the responsibility boundary is the same as the provider-managed model.</t>
+		</list>
+		</t>
+		<t>Based on the management model, different security options MAY be derived.</t>
+		<t>In case of "co-managed", the model proposes some option to define the management transport protocol (IPv4 or IPv6) and the associated
+		management address.</t>
+		</section>
+		
+		<section anchor="site-attachment-conn-routing" title="Routing protocols">
+				<t>Routing-protocol defines which routing protocol must be activated between the provider and the customer router. The current model support : bgp, rip, ospf, static, direct, vrrp.</t>
+				<t>The routing protocol defined applies at the provider to customer boundary. Depending of the management of the management model, it may apply to the PE-CE boundary or CE to customer boundary.
+				In case of customer managed site, the routing-protocol defined will be activated between the PE and the CE router managed by the customer.
+				In case of provider managed site, the routing-protocol defined will be activated between the CE managed by the SP and the router or LAN belonging to the customer. 
+				In this case, it is expected that the PE-CE routing will be configured based on the service provider rules as both are managed by the same entity.
+				</t>
+				
+				<figure>
+				<artwork>
+				            Rtg protocol
+	192.0.2.0/24 ----- CE ----------------- PE1
+	
+	             Customer managed site
+				</artwork>
+				</figure>
+				<figure>
+				<artwork>
+		  Rtg protocol		           
+	Customer router ----- CE ----------------- PE1
+	
+	             Provider managed site
+				</artwork>
+				</figure>
+				<t>All the examples below will refer to a customer managed site case.</t>
+				
+					<section anchor="site-attachment-conn-dualstack" title="Dual stack handling">
+					<t>
+					All routing protocol types support dual stack by using address-family leaf-list.
+					</t>
+					<figure>
+					<artwork>
+Example of Dual stack using the same routing protocol :
+
+&lt;routing-protocols&gt;
+  &lt;routing-protocol&gt;
+	&lt;type&gt;static&lt;/type&gt;
+	&lt;static&gt;
+		&lt;address-family&gt;ipv4&lt;/address-family&gt;
+		&lt;address-family&gt;ipv6&lt;/address-family&gt;
+	&lt;/static&gt;
+  &lt;/routing-protocol&gt;
+&lt;/routing-protocols&gt;
+					</artwork>
+					</figure>
+					<figure>
+					<artwork>
+Example of Dual stack using two different routing protocols :
+
+&lt;routing-protocols&gt;
+  &lt;routing-protocol&gt;
+	&lt;type&gt;rip&lt;/type&gt;
+	&lt;rip&gt;
+		&lt;address-family&gt;ipv4&lt;/address-family&gt;
+	&lt;/rip&gt;
+  &lt;/routing-protocol&gt;
+  &lt;routing-protocol&gt;
+	&lt;type&gt;ospf&lt;/type&gt;
+	&lt;ospf&gt;
+		&lt;address-family&gt;ipv6&lt;/address-family&gt;
+	&lt;/ospf&gt;
+  &lt;/routing-protocol&gt;
+&lt;/routing-protocols&gt;
+					</artwork>
+					</figure>
+					</section>
+					<section anchor="site-attachment-conn-routing-direct" title="Direct LAN connection onto SP network">
+					<t>Routing-protocol "direct" SHOULD be used when a customer LAN is directly connected to the provider network and must be advertised in the IPVPN.</t>
+					<figure>
+					<artwork>
+		LAN attached directly to provider network :
+
+		192.0.2.0/24 ----- PE1
+					</artwork>
+					</figure>
+					<t>
+					In this case, the customer has a default route to the PE address.
+					</t>
+					</section>
+					
+					<section anchor="site-attachment-conn-routing-direct-red" title="Direct LAN connection onto SP network with redundancy">
+					<t>Routing-protocol "vrrp" SHOULD be used when a customer LAN is directly connected to the provider network and must be advertised in the IPVPN and LAN redundancy is expected.</t>
+					<figure>
+					<artwork>
+	  LAN attached directly to provider network with LAN redundancy:
+
+		192.0.2.0/24 ------ PE1
+					   |
+					   +--- PE2
+					</artwork>
+					</figure>
+					<t>
+					In this case, the customer has a default route to the service provider network.
+					</t>
+					</section>
+					
+					<section anchor="site-attachment-conn-routing-static" title="Static routing">
+					<t>Routing-protocol "static" MAY be used when a customer LAN is connected to the provider network through a CE router and must be advertised in the IPVPN.</t>
+					<figure>
+					<artwork>
+                                Static rtg
+       192.0.2.0/24 ------ CE -------------- PE
+		                    |                |
+			                |      Static route 192.0.2.0/24 nh CE
+			Static route 0.0.0.0/0 nh PE
+					</artwork>
+					</figure>
+					<t>
+					In this case, the customer has a default route to the service provider network.
+					</t>
+					</section>
+					
+					<section anchor="site-attachment-conn-routing-rip" title="RIP routing">
+					<t>Routing-protocol "rip"  MAY be used when a customer LAN is connected to the provider network through a CE router and must be advertised in the IPVPN. For IPv4, the model assumes usage of RIP version 2.</t>
+					<t>In case of dual stack routing requested through this model, the management system will be responsible to configure rip (including right version number) and rip-ng instances on network elements.</t>
+					<figure>
+					<artwork>
+                                RIP rtg
+        192.0.2.0/24 ------ CE -------------- PE
+
+					</artwork>
+					</figure>
+					</section>
+					<section anchor="site-attachment-conn-routing-ospf" title="OSPF routing">
+					<t>Routing-protocol "ospf"  MAY be used when a customer LAN is connected to the provider network through a CE router and must be advertised in the IPVPN.</t>
+					<t>It can be used to extend an existing OSPF network and interconnect different areas. See <xref target="RFC4577"/> for more details.</t>
+					<figure>
+					<artwork>
+                          +---------------------+
+                          |                     |
+                  OSPF    |                     | OSPF 
+                  area 1  |                     | area 2
+ (OSPF                    |                     |          (OSPF
+ area 1) --- CE ---------- PE               PE ----- CE --- area 2)
+                          |                     |
+                          +---------------------+
+ 
+					</artwork>
+					</figure>
+					<t>The model also proposes an option to create an OSPF sham-link between two sites sharing the same area and having a backdoor link.
+					The sham-link is created by referencing the target site sharing the same OSPF area. The management system will be responsible
+					to check if there is already a shamlink configured for this VPN and area between the same pair of PEs. If there is no existing shamlink,
+					the management system will provision it, this shamlink MAY be reused by other sites.</t>
+					<figure>
+					<artwork>
+                        +------------------------+
+                        |                        |
+                        |                        |
+                        |   PE (--shamlink--)PE  |
+                        |    |                |  |
+                        +----|----------------|--+
+						     | OSPF area1     | OSPF area 1
+							 |                |
+							 CE1             CE2
+							 |                |
+						(OSPF area1)       (OSPF area1)
+						     |                |
+							 +----------------+
+					</artwork>
+					</figure>
+					<t>
+					Regarding Dual stack support, user MAY decide to fill both IPv4 and IPv6 address families, if both protocols SHOULD 
+					be routed through OSPF. As OSPF is using two different protocol for IPv4 and IPv6, the management system will need to configure
+					both ospf version 2 and version 3 on the PE-CE link.
+					</t>
+					<t>Example of OSPF routing parameters in service model.</t>
+					<figure>
+					<artwork>
+&lt;routing-protocols&gt;				
+  &lt;routing-protocol&gt;
+	&lt;type&gt;ospf&lt;/type&gt;
+	&lt;ospf&gt;
+		&lt;area-address&gt;0.0.0.1&lt;/area-address&gt;
+		&lt;address-family&gt;ipv4&lt;/address-family&gt;
+		&lt;address-family&gt;ipv6&lt;/address-family&gt;
+	&lt;/ospf&gt;
+  &lt;/routing-protocol&gt;
+&lt;/routing-protocols&gt;
+					</artwork>
+					</figure>
+					
+					<figure>
+					<artwork>
+Example of PE configuration done by management system :
+
+router ospf 10
+ area 0.0.0.1
+  interface Ethernet0/0
+!
+router ospfv3 10
+ area 0.0.0.1
+  interface Ethernet0/0
+ !
+					</artwork>
+					</figure>
+					</section>
+					<section anchor="site-attachment-conn-routing-bgp" title="BGP routing">
+					<t>Routing-protocol "bgp" MAY be used when a customer LAN is connected to the provider network through a CE router and must be advertised in the IPVPN.</t>
+					<figure>
+					<artwork>
+                                BGP rtg
+      192.0.2.0/24 ------ CE -------------- PE
+
+					</artwork>
+					</figure>
+					<t>The session addressing will be derived from connection parameters as well as internal knowledge of SP.</t>
+					<t>In case of dual stack access, user MAY request BGP routing for both IPv4 and IPv6 by filling both address-families.
+					It will be up to SP and management system to decide how to decline the configuration (two BGP sessions, single, multisession ...).</t>
+					<t>The service configuration below actives BGP on PE-CE link for both IPv4 and IPv6.</t>
+					<t>BGP activation requires SP to know the address of the customer peer. "static-address" allocation type for the IP connection MUST be used.</t>
+					<figure>
+					<artwork>
+&lt;routing-protocols&gt;
+  &lt;routing-protocol&gt;
+	&lt;type&gt;bgp&lt;/type&gt;
+	&lt;bgp&gt;
+		&lt;autonomous-system&gt;65000&lt;/autonomous-system&gt;
+		&lt;address-family&gt;ipv4&lt;/address-family&gt;
+		&lt;address-family&gt;ipv6&lt;/address-family&gt;
+	&lt;bgp&gt;
+  &lt;/routing-protocol&gt;
+&lt;/routing-protocols&gt;
+					</artwork>
+					</figure>
+					<t>
+					This service configuration can be derived by management system into multiple flavors depending on SP flavor.
+					</t>
+					<figure>
+					<artwork>
+Example #1 of PE configuration done by management system 
+(single session IPv4 transport):
+
+router bgp 100
+ neighbor 203.0.113.2 remote-as 65000
+ address-family ipv4 vrf Cust1
+	neighbor 203.0.113.2 activate
+ address-family ipv6 vrf Cust1
+	neighbor 203.0.113.2 activate
+	neighbor 203.0.113.2 route-map SET-NH-IPV6 out
+					</artwork>
+					</figure>
+					<figure>
+					<artwork>
+Example #2 of PE configuration done 
+by management system (two sessions):
+
+router bgp 100
+ neighbor 203.0.113.2 remote-as 65000
+ neighbor 2001::2 remote-as 65000
+ address-family ipv4 vrf Cust1
+	neighbor 203.0.113.2 activate
+ address-family ipv6 vrf Cust1
+	neighbor 2001::2 activate
+					</artwork>
+					</figure>
+					<figure>
+					<artwork>
+Example #3 of PE configuration done 
+by management system (multisession):
+
+router bgp 100
+ neighbor 203.0.113.2 remote-as 65000
+ neighbor 203.0.113.2 multisession per-af
+ address-family ipv4 vrf Cust1
+	neighbor 203.0.113.2 activate
+ address-family ipv6 vrf Cust1
+	neighbor 203.0.113.2 activate
+	neighbor 203.0.113.2 route-map SET-NH-IPV6 out
+					</artwork>
+					</figure>
+					</section>
+		</section>
+		
+		<section anchor="site-service" title="Service">
+		<t>
+		The service defines service parameters associated with the site.
+		</t>
+			<section anchor="site-svc-bw" title="Bandwidth">
+			<t>
+			The service bandwidth refers to the bandwidth requirement between PE and CE (WAN access bandwidth).
+			The requested bandwidth is expressed as svc-input-bandwidth and svc-output-bandwidth in bit per seconds.
+			Input/output direction is using customer site as reference : input bandwidth so means download bandwidth for the site, and output bandwidth means upload bandwidth for the site.
+			</t>
+			<t>
+			Using a different input and output bandwidth will allow service provider to know if customer allows for asymmetric bandwidth access like ADSL. 
+			It can also be used to rate-limit in a different way upload and download on a symmetric bandwidth access.
+			</t>
+			<t>
+			The bandwidth is a service bandwidth : expressed primarly as IP bandwidth but if the customer enables MPLS for carrier's carrier, this becomes MPLS bandwidth.
+			</t>
+			</section>
+			<section anchor="site-svc-qos" title="QoS">
+			<t>
+			The model proposes to define QoS parameters in an abstracted way :
+			<list style="symbols">
+			<t>qos-classification-policy : define a set of ordered rules to classify customer traffic.</t>
+			<t>qos-profile : QoS scheduling profile to be applied.</t>
+			</list>
+			</t>
+				<section anchor="site-svc-qos-classification" title="QoS classification">
+				<t>
+				QoS classification rules are handled by qos-classification-policy.
+				The qos-classification-policy is an ordered list of rules that match a flow or application and set the appropriate target class of service (target-class-id).
+				The user can define the match using an application reference or a more specific flow definition (based layer 3 source and destination address, layer 4 ports, layer 4 protocol).
+				The current model defines some applications but new application identities may be added through augmentation.
+				The exact meaning of each application identity is up to the service provider, so it will be necessary for the service provider to advise customer on usage of application matching.
+				</t>
+				<t>Where the classification is done depends on the SP implementation of the service, but classification concerns the flow coming from the customer
+				site and entering the network.</t>
+				<figure>
+				<artwork>
+				               Provider network
+						  +-----------------------+
+   192.0.2.0/24
+198.51.100.0/24 ---- CE --------- PE
+
+  Traffic flow
+ ----------&gt;
+				
+				</artwork>
+				</figure>
+				<t>
+				In the figure above, the management system can decide :
+				<list style="symbols">
+				<t>if the CE is customer managed, to implement the classification rule in the ingress direction on the PE interface.</t>
+				<t>if the CE is provider managed, to implement the classification rule in the ingress direction on the CE interface connected to customer LAN.</t>
+				</list>
+				</t>
+				<t>The figure below describes a sample service description of qos-classification for a site  :</t> 
+				<figure>
+				<artwork>
+&lt;service&gt;
+	&lt;qos&gt;
+		&lt;qos-classification-policy&gt;
+			&lt;rule&gt;
+				&lt;id&gt;1&lt;/id&gt;
+				&lt;match-flow&gt;
+					&lt;ipv4-src-prefix&gt;192.0.2.0/24&lt;/ipv4-src-prefix&gt;
+					&lt;ipv4-dst-prefix&gt;203.0.113.1/32&lt;/ipv4-dst-prefix&gt;
+					&lt;l4-dst-port&gt;80&lt;/l4-dst-port&gt;
+					&lt;l4-protocol&gt;tcp&lt;/l4-protocol&gt;
+				&lt;/match-flow&gt;
+				&lt;target-class-id&gt;DATA2&lt;/target-class-id&gt;
+			&lt;/rule&gt;
+			&lt;rule&gt;
+				&lt;id&gt;2&lt;/id&gt;
+				&lt;match-flow&gt;
+					&lt;ipv4-src-prefix&gt;192.0.2.0/24&lt;/ipv4-src-prefix&gt;
+					&lt;ipv4-dst-prefix&gt;203.0.113.1/32&lt;/ipv4-dst-prefix&gt;
+					&lt;l4-dst-port&gt;21&lt;/l4-dst-port&gt;
+					&lt;l4-protocol&gt;tcp&lt;/l4-protocol&gt;
+				&lt;/match-flow&gt;
+				&lt;target-class-id&gt;DATA2&lt;/target-class-id&gt;
+			&lt;/rule&gt;
+			&lt;rule&gt;
+				&lt;id&gt;3&lt;/id&gt;
+				&lt;match-application&gt;p2p&lt;/match-application&gt;
+				&lt;target-class-id&gt;DATA3&lt;/target-class-id&gt;
+			&lt;/rule&gt;
+			&lt;rule&gt;
+				&lt;id&gt;4&lt;/id&gt;
+				&lt;target-class-id&gt;DATA1&lt;/target-class-id&gt;
+			&lt;/rule&gt;
+		&lt;/qos-classification-policy&gt;
+	&lt;/qos&gt;
+&lt;/service&gt;
+				</artwork>
+				</figure>
+				<t>
+				In the example above :
+					<list style="symbols">
+					<t>HTTP traffic from 192.0.2.0/24 LAN destinated to 203.0.113.1/32 will be classified in DATA2.</t>
+					<t>FTP traffic from 192.0.2.0/24 LAN destinated to 203.0.113.1/32 will be classified in DATA2.</t>
+					<t>Peer to peer traffic wille be classified in DATA3.</t>
+					<t>All other traffic will be classified in DATA1.</t>
+					</list>
+				</t>
+				<t>
+				The order of rules is really important. The management system responsible for translating those rules in network element configuration MUST keep 
+				the same processing order in element configuration. The order of rule is defined by the "id" leaf. The lowest "id" MUST be processed first.
+				</t>
+				</section>
+				<section anchor="site-svc-qos-profile" title="QoS profile">
+				<t>User can choose between standard profile provided by the operator or custom profile.
+				The qos-profile defines the traffic scheduling policy to be used by the service provider.</t>
+				<figure>
+				<artwork>
+				               Provider network
+						  +-----------------------+
+192.0.2.0/24
+198.51.100.0/24 ---- CE --------- PE
+                        \       /
+                       qos-profile
+				
+				</artwork>
+				</figure>
+				<t>
+				In case of provider managed or co-managed connection, the provider should ensure scheduling according to the requested policy in both traffic directions (SP to customer and customer to SP).
+				As example of implementation, a device scheduling policy may be implemented both at PE and CE side on the WAN link.
+				In case of customer managed connection, the provider is only responsible to ensure scheduling from SP network to the customer site. As example of implementation, a device scheduling policy may be implemented only at PE side on the WAN link towards the customer.
+				</t>
+				<t>
+				A custom qos-profile is defined as a list of class of services and associated properties. The properties are :
+				<list style="symbols">
+				<t>rate-limit : used to rate-limit the class of service. The value is expressed as a percentage of the global service bandwidth. When the qos-profile is implemented at CE side the svc-output-bandwidth is taken into account as reference. 
+				When it is implemented at PE side, the svc-input-bandwidth is used.</t>
+				<t>priority-level : used to define priorities between class of services. The value of the priority to be used is dependant of each administration.
+				The higher the priority-level is, the higher the priority of the class will be. Priority-level can be used to define strict priority queueing. 
+				A priority-level 250 class will be served before a priority-level 100 class until there is no more packet to process or until rate-limit does not allow anymore packets from the higher priority class.
+				</t>
+				<t>guaranteed-bw-percent : used to define a guaranteed amount of bandwidth for the class of service. It is expressed as a percentage.
+				The guaranteed-bw-percent uses available bandwidth at the priority-level of the class. When the qos-profile is implemented at CE side the svc-output-bandwidth is taken into account as reference. 
+				When it is implemented at PE side, the svc-input-bandwidth is used.</t>
+				</list>
+				</t>
+				<t>
+				Example of service configuration using a standard qos profile :
+				<figure>
+				<artwork>
+&lt;site&gt;
+	&lt;site-id&gt;1245HRTFGJGJ154654&lt;/site-id&gt;
+	&lt;service&gt;
+		&lt;svc-input-bandwidth&gt;100000000&lt;/svc-input-bandwidth&gt;
+		&lt;svc-output-bandwidth&gt;100000000&lt;/svc-output-bandwidth&gt;
+		&lt;qos&gt;
+			&lt;qos-profile&gt;
+				&lt;profile&gt;PLATINUM&lt;/profile&gt;
+			&lt;/qos-profile&gt;
+		&lt;/qos&gt;
+	&lt;/service&gt;
+&lt;/site&gt;
+&lt;site&gt;
+	&lt;site-id&gt;555555AAAA2344&lt;/site-id&gt;
+	&lt;service&gt;
+		&lt;svc-input-bandwidth&gt;2000000&lt;/svc-input-bandwidth&gt;
+		&lt;svc-output-bandwidth&gt;2000000&lt;/svc-output-bandwidth&gt;
+		&lt;qos&gt;
+			&lt;qos-profile&gt;
+				&lt;profile&gt;GOLD&lt;/profile&gt;
+			&lt;/qos-profile&gt;
+		&lt;/qos&gt;
+	&lt;/service&gt;
+&lt;/site&gt;
+				
+				</artwork>
+				</figure>
+				</t>
+				
+				<t>
+				Example of service configuration using a custom qos profile :
+				<figure>
+				<artwork>
+&lt;site&gt;
+	&lt;site-id&gt;Site1&lt;/site-id&gt;
+	&lt;service&gt;
+		&lt;svc-input-bandwidth&gt;100000000&lt;/svc-input-bandwidth&gt;
+		&lt;svc-output-bandwidth&gt;100000000&lt;/svc-output-bandwidth&gt;
+		&lt;qos&gt;
+			&lt;qos-profile&gt;
+				&lt;classes&gt;
+					&lt;class&gt;
+						&lt;class-id&gt;REAL_TIME&lt;/class-id&gt;
+						&lt;rate-limit&gt;10&lt;/rate-limit&gt;
+						&lt;priority-level&gt;10&lt;/priority-level&gt;
+					&lt;/class&gt;
+					&lt;class&gt;
+						&lt;class-id&gt;DATA&lt;/class-id&gt;
+						&lt;priority-level&gt;5&lt;/priority-level&gt;
+					&lt;/class&gt;
+				&lt;/classes&gt;
+			&lt;/qos-profile&gt;
+		&lt;/qos&gt;
+	&lt;/service&gt;
+&lt;/site&gt;
+&lt;site&gt;
+	&lt;site-id&gt;Site2&lt;/site-id&gt;
+	&lt;service&gt;
+		&lt;svc-input-bandwidth&gt;2000000&lt;/svc-input-bandwidth&gt;
+		&lt;svc-output-bandwidth&gt;2000000&lt;/svc-output-bandwidth&gt;
+		&lt;qos&gt;
+			&lt;qos-profile&gt;
+				&lt;classes&gt;
+					&lt;class&gt;
+					  &lt;class-id&gt;REAL_TIME&lt;/class-id&gt;
+					  &lt;rate-limit&gt;30&lt;/rate-limit&gt;
+					  &lt;priority-level&gt;10&lt;/priority-level&gt;
+					&lt;/class&gt;
+					&lt;class&gt;
+					  &lt;class-id&gt;DATA1&lt;/class-id&gt;
+					  &lt;priority-level&gt;5&lt;/priority-level&gt;
+					  &lt;guaranteed-bw-percent&gt;80&lt;/guaranteed-bw-percent&gt;
+					&lt;/class&gt;
+					&lt;class&gt;
+					  &lt;class-id&gt;DATA2&lt;/class-id&gt;
+					  &lt;priority-level&gt;5&lt;/priority-level&gt;
+					  &lt;guaranteed-bw-percent&gt;20&lt;/guaranteed-bw-percent&gt;
+					&lt;/class&gt;
+				&lt;/classes&gt;
+			&lt;/qos-profile&gt;
+		&lt;/qos&gt;
+	&lt;/service&gt;
+&lt;/site&gt;
+				
+				</artwork>
+				</figure>
+				</t>
+				<t>
+				The custom qos-profile for site1 defines that traffic from REAL_TIME class will have a higher priority than traffic from DATA class.
+				The REAL_TIME traffic will be rate-limit to 10% of the service bandwidth (10% of 100Mbps = 10Mbps) to let some place for DATA traffic.
+				</t>
+				<t>
+				The custom qos-profile for site2 defines that traffic from REAL_TIME class will have a higher priority than traffic from data traffic.
+				Data traffic will be splitted in two class of service DATA1 and DATA2 that will share bandwidth between them according to the percentage of guaranteed-bw-percent.
+				The maximum of percentage to be used is not limited by this model but MUST be limited by the management system according to the policies authorized by the service provider.
+				The REAL_TIME traffic will be rate-limit to 30% of the service bandwidth (30% of 100Mbps = 30Mbps) to let some place for data traffic.
+				In case of congestion of the access, the REAL_TIME traffic can go up to 30Mbps (Let's assume that 20Mbps only are consumed). 
+				The DATA1 and DATA2 will share remaining bandwidth (80Mbps) according to their percentage. So DATA1 will be served with at least 64Mbps of bandwidth.
+				</t>
+				</section>
+			
+			</section>
+			
+			<section anchor="site-svc-multicast" title="Multicast">
+			<t>
+			The multicast section defines the type of site in the customer multicast topology : source, receiver, or both.
+			These parameters will help management system to optimize the multicast service.
+			User can also define the type of multicast relation with the customer : router (requires a protocol like PIM), host (IGMP or MLD), or both.
+			Transport protocol (IPv4 or IPv6 or both) can also be defined.
+			</t>
+			</section>
+			
+			
+		</section>
+		
+		
+		
+		
+	  <section anchor="enhanced-vpn" title="Enhanced VPN features">
+		<section anchor="site-mpls" title="Carrier's Carrier">
+		<t>
+		In case of Carrier's Carrier (<xref target="RFC4364"/>), a customer MAY want to build MPLS service using an IPVPN as transport layer.
+		</t>
+		<figure>
+		<artwork>
+        LAN customer1
+            |
+            |
+           CE1
+            |
+            | -------------
+		 (vrf_cust1)
+          CE1_ISP1
+            |                 ISP1 PoP
+            | MPLS link
+            | -------------
+			|
+         (vrf ISP1)
+           PE1
+                     
+
+          (...)               Provider backbone
+
+
+           PE2
+          (vrf ISP1)
+            |
+            | ------------
+            |
+            | MPLS link
+            |                 ISP1 PoP
+           CE2_ISP1
+           (vrf_cust1)
+            |-------------
+            |
+           CE2
+            |
+         Lan customer1			
+ 
+		
+		</artwork>
+		</figure>
+		<t>
+		In the figure above, ISP1 resells IPVPN service but has no transport infrastructure between its PoPs. ISP1 uses an IPVPN as transport infrastructure (belonging to another provider) between its PoPs.
+		</t>
+		<t>
+		In order to support CsC, the VPN service must be declared MPLS support using the "carrierscarrier" leaf set to true in vpn-svc.
+		The link between CE1_ISP1/PE1 and CE2_ISP1/PE2 must also run a MPLS signalling protocol. This configuration is done at the site level.
+		</t>
+		<t>
+		In the proposed model, LDP or BGP can be used as MPLS signalling protocol. In case of LDP, an IGP routing protocol MUST also be activated.
+		In case of BGP signalling, BGP MUST also be configured as routing-protocol.
+		</t>
+		<t>
+		In case Carrier's Carrier is enabled, the requested svc-mtu will refer to the MPLS MTU and no more to the IP MTU.
+		</t>
+		</section>
+		<section anchor="yang-vpn-global-transport" title="Transport constraints">
+		<t>
+		A customer may require some constraints for transporting traffic between particular sites. As example, a customer may require low latencies and disjoint paths
+		between two hub sites.
+		The current model proposes to define a list of constraints that can be augmented for unicast and/or multicast traffic.
+		For unicast traffic, the model considers that the constraints are bidirectional (same constraint from site1 to site2 and site2 to site1). For multicast, constraints are unidirectional from source to receiver.
+		The current model supports the following constraints :
+			<list style="symbols">
+			<t>Latency : this constraint allow to create the lowest latency path possible or to create a path with a latency boundary. In case a latency boundary is required, the boundary MUST be encoded in the constraint-opaque-value using a millisecond unit.</t>
+			<t>Bandwidth : this constraint allow to create a path that fits specific bandwidth requirement. If no constraint-opaque-value is provided, an implementation SHOULD use the lowest bandwidth between the two sites as reference. If constraint-opaque-value is used, the required bandwidth MUST be encoded in Mbps, and the implementation MUST use this value as reference.</t> 
+			<t>Jitter : this constraint allow to create a path with a jitter boundary. constraint-opaque-value MUST be used with jitter constraint and MUST contain the jitter boundary expressed in milliseconds.</t>
+			<t>Path diversity : this constraint allow creation of disjoint paths between two sites. This requires the customer sites to be multihomed. constraint-opaque-value is not used.</t>
+			<t>Site diversity : this constraint is similar to path diversity but ensures that paths are not crossing the same provider PoPs. This requires the customer sites to be multihomed. constraint-opaque-value MAY be used to encode additional site location that must be avoided.</t>
+			</list>
+		</t>
+		</section>
+	  </section>
+	  
+	  <section anchor="ext-references" title="External ID references">
+	  <t>
+	  The service model sometimes refers to external information through identifiers. As an example, to order a cloud-access to a particular Cloud Service Provider (CSP), the model uses an identifier to refer to the targeted CSP.
+	  In case, a customer is using directly this service model as an API (through REST or NETCONF for example) to order a particular service, the service provider should provide a list of authorized identifiers. In case of cloud-access, the service provider will provide the identifiers associated of each available CSP.
+	The same applies to other identifiers like std-qos-profile, oam profile-name, provider-profile for encryption ...
+	  
+	  </t>
+	  <t>How SP provides those identifiers meaning to the customer is out of scope of this document.</t>
+	  </section>
+	  <section anchor="interas" title="Defining NNIs">
+	  <t>
+	  An autonomous system is a single network or group of networks that is controlled by a common system administration group and that uses a single, clearly defined routing protocol. 
+	  In some cases, VPNs need to span across different autonomous systems in different geographic areas or across different service providers. 
+	  The connection between autonomous systems is established by the Service Providers and is seamless to the customer.
+	  </t>
+	  <t>Some examples are : Partnership between service providers (transport, cloud  ...) to extend their VPN service seamlessly, or internal administrative boundary within a single service provider (Backhaul vs Core vs Datacenter ...).
+	  </t>
+	  <t>
+	  NNIs (Network to Network Interfaces) have to be defined to extend the VPNs across multiple autonomous systems.
+	  </t>
+	  <t>
+	  <xref target="RFC4364"/> defines multiple flavor of VPN NNI implementations. Each implementation has different pros/cons that are outside the scope of this document.
+	  As an example : 
+	  In an Inter-AS Option A, ASBR peers are connected by multiple interfaces with at least one interface VPN that spans the two autonomous systems. 
+	  These ASBRs associate each interface with a VPN routing and forwarding (VRF) instance and a Border Gateway Protocol (BGP) session to signal unlabeled IP prefixes. 
+	  As a result, traffic between the back-to-back VRFs is IP. In this scenario, the VPNs are isolated from each other, and because the traffic is IP, QoS mechanisms that operate on IP traffic can be applied to achieve customer Service Level Agreements (SLAs).
+	  </t>
+		<figure>
+		<artwork>
+  --------                 --------------              -----
+ /        \               /              \            /     \
+| Cloud    |             |                |          |       |
+| Provider | ----NNI---- |                | ---NNI---|   DC  |
+|  #1      |             |                |          |       |
+ \        /              |                |           \     /
+  --------               |                |             ----
+                         |                |
+  --------               |   My network   |           -----------
+ /        \              |                |          /           \
+| Cloud    |             |                |         |             |
+| Provider | ----NNI---- |                |---NNI---|  L3VPN      |
+|  #2      |             |                |         |  Partner    |
+ \        /              |                |         |             |
+  --------               |                |         |             |
+                          \              /          |             |
+						   --------------            \           /
+						         |                     ----------
+                                 |
+                                NNI
+								 |
+								 |
+                         -------------------
+                        /                   \
+                       |                     |
+                       |                     |
+                       |                     |
+                       |     L3VPN partner   |
+                       |                     |
+                        \                   /
+                          ------------------
+						 
+		</artwork>
+		</figure>
+		<t>
+		The figure above describes a service provider network "My network" that has several NNIs. This network uses NNI to :
+		<list style="symbols">
+		<t>increase its footprint by relying on L3VPN partners.</t>
+		<t>connect its own datacenter services to the customer IPVPN.</t>
+		<t>enable customer to access to its private resources located in private cloud owned by some cloud service providers.</t>
+		</list>
+		</t>
+		<section anchor="interas-a" title="Defining NNI with option A flavor">
+		<figure>
+		<artwork>
+        AS A                                             AS B
+  ---------------------                         --------------------
+ /                     \                       /                    \
+|                       |                     |                      |
+|                   ++++++++ InterAS link ++++++++                   |
+|                   +      +_____________ +      +                   |
+|                   +  (VRF1)--(VPN1)----(VRF1)  +                   |
+|                   + ASBR +              + ASBR +                   |
+|                   +  (VRF2)--(VPN2)----(VRF2)  +                   |
+|                   +      +______________+      +                   |
+|                   ++++++++              ++++++++                   |
+|                       |                     |                      |
+|                       |                     |                      |
+|                       |                     |                      |
+|                   ++++++++ InterAS link ++++++++                   |
+|                   +      +_____________ +      +                   |
+|                   +  (VRF1)--(VPN1)----(VRF1)  +                   |
+|                   + ASBR +              + ASBR +                   |
+|                   +  (VRF2)--(VPN2)----(VRF2)  +                   |
+|                   +      +______________+      +                   |
+|                   ++++++++              ++++++++                   |
+|                       |                     |                      |
+|                       |                     |                      |
+ \                     /                       \                    /
+   --------------------                          -------------------
+
+		</artwork>
+		</figure>
+		<t>
+		In option A, the two ASes are connected between each other with physical links on Autonomous System Border Routers (ASBR). There may be multiple physical connections between the ASes for a resiliency purpose.
+		A VPN connection, physical or logical (on top of physical), is created for each VPN that needs to cross the AS boundary. A back-to-back VRF model is so created.
+		</t>
+		<t>This VPN connection can be seen as a site from a service model perspective. Let's say that AS B wants to extend some VPN connection for VPN C on AS A. Administrator of AS B can use this service model to order a site on AS A.
+		All connection scenarios could be realized using the current model features. As an example, the figure above, where two physical connections are involved with logical connections per VPN on top, could be seen as a dual-homed subvpn scenario.
+		And for example, administrator from AS B will be able to choose the appropriate routing protocol (e.g. ebgp) to dynamically exchange routes between ASes.
+		</t>
+		<t>
+		This document so supposes that option A NNI flavor SHOULD reuse the existing VPN site modeling.
+		</t>
+		<t>Example : a customer wants from its cloud service provider A to attach its virtual network N to an existing IPVPN (VPN1) he has from a L3VPN service provider B.
+		</t>
+		<figure>
+		<artwork>
+   CSP A                                  L3VPN SP B
+           
+  -----------------                    --------------------
+ /                 \                  /                    \
+|       |           |                |                      |
+|  VM --|       ++++++++  NNI    ++++++++                   |---- VPN1
+|       |       +      +_________+      +                   |     Site#1
+|       |--------(VRF1)---(VPN1)--(VRF1)+                   |
+|       |       + ASBR +         + ASBR +                   |
+|       |       +      +_________+      +                   |
+|       |       ++++++++         ++++++++                   |
+|  VM --|           |                |                      |---- VPN1
+|       |Virtual    |                |                      |     Site#2
+|       |Network    |                |                      |
+|  VM --|           |                |                      |---- VPN1
+|       |           |                |                      |     Site#3
+ \                 /                  \                    /
+   ----------------                    -------------------
+                                                 |
+                                                 |
+                                               VPN1 
+                                              Site#4
+
+		</artwork>
+		</figure>		
+		<t>
+		The cloud service provider or the customer itself may use our L3VPN service model exposed by service provider B to create the VPN connectivity.
+		We could consider that, as the NNI is shared, the physical connection (bearer) between CSP A and SP B already exists. 
+		CSP A may so request through a service model a new site creation with a single site-network-access (single homing used in the diagram). As placement constraint, CSP A may use the existing bearer reference it has from SP A to force the placement of the VPN NNI on the existing link.
+		The XML below describes what could be the configuration request to SP B :
+		</t>
+		<figure>
+		<artwork>
+&lt;site&gt;
+	&lt;site-id&gt;CSP_A_attachment&lt;/site-id&gt;
+	&lt;location&gt;
+		&lt;city-code&gt;NY&lt;/city-code&gt;
+		&lt;country-code&gt;US&lt;/country-code&gt;
+	&lt;/location&gt;
+	&lt;site-vpn-flavor&gt;site-vpn-flavor-nni&lt;/site-vpn-flavor&gt;
+	&lt;routing-protocols&gt;
+	  &lt;routing-protocol&gt;
+		&lt;type&gt;bgp&lt;/type&gt;
+		&lt;bgp&gt;
+			&lt;autonomous-system&gt;500&lt;/autonomous-system&gt;
+			&lt;address-family&gt;ipv4&lt;/address-family&gt;
+		&lt;/bgp&gt;
+	  &lt;/routing-protocol&gt;
+	&lt;/routing-protocols&gt;
+	&lt;site-network-accesses&gt;
+	 &lt;site-network-access&gt;
+      &lt;site-network-access-id&gt;CSP_A_VN1&lt;/site-network-access-id&gt;
+	   &lt;ip-connection&gt;
+	    &lt;ipv4&gt;
+		 &lt;address-allocation-type&gt;static-address&lt;/address-allocation-type&gt;
+		 &lt;addresses&gt;
+		  &lt;provider-address&gt;203.0.113.1&lt;/provider-address&gt;
+		  &lt;customer-address&gt;203.0.113.2&lt;/customer-address&gt;
+		  &lt;mask&gt;30&lt;/mask&gt;
+		 &lt;/addresses&gt;
+		&lt;/ipv4&gt;
+	   &lt;/ip-connection&gt;
+	   &lt;vpn-attachment&gt;
+	    &lt;vpn-id&gt;VPN1&lt;/vpn-id&gt;
+	    &lt;site-role&gt;any-to-any-role&lt;/site-role&gt;
+	   &lt;/vpn-attachment&gt;
+	 &lt;/site-network-access&gt;
+	&lt;/site-network-accesses&gt;
+	&lt;management&gt;
+		&lt;type&gt;customer-managed&lt;/type&gt;
+	&lt;/management&gt;
+	&lt;service&gt;
+		&lt;svc-input-bandwidth&gt;450000000&lt;/svc-input-bandwidth&gt;
+		&lt;svc-output-bandwidth&gt;450000000&lt;/svc-output-bandwidth&gt;
+	&lt;/service&gt;
+&lt;/site&gt;
+		</artwork>
+		</figure>
+		<t>
+		The case described above is different from the cloud-access container usage as the cloud-access provides a public cloud access while this example enables access to private resources located in a cloud service provider network.
+		</t>
+		</section>
+		<section anchor="interas-b" title="Defining NNI with option B flavor">
+		<figure>
+		<artwork>
+        AS A                                             AS B
+  ---------------------                         --------------------
+ /                     \                       /                    \
+|                       |                     |                      |
+|                   ++++++++ InterAS link ++++++++                   |
+|                   +      +_____________ +      +                   |
+|                   +      +              +      +                   |
+|                   + ASBR +&lt;---mpebgp---&gt;+ ASBR +                   |
+|                   +      +              +      +                   |
+|                   +      +______________+      +                   |
+|                   ++++++++              ++++++++                   |
+|                       |                     |                      |
+|                       |                     |                      |
+|                       |                     |                      |
+|                   ++++++++ InterAS link ++++++++                   |
+|                   +      +_____________ +      +                   |
+|                   +      +              +      +                   |
+|                   + ASBR +&lt;---mpebgp---&gt;+ ASBR +                   |
+|                   +      +              +      +                   |
+|                   +      +______________+      +                   |
+|                   ++++++++              ++++++++                   |
+|                       |                     |                      |
+|                       |                     |                      |
+ \                     /                       \                    /
+   --------------------                          -------------------
+
+		</artwork>
+		</figure>
+		<t>
+		In option B, the two ASes are connected between each other with physical links on Autonomous System Border Routers (ASBR). There may be multiple physical connections between the ASes for a resiliency purpose.
+		The VPN "connection" between ASes is done by exchanging VPN routes through MP-BGP.
+		</t>
+		<t>
+		There are multiple flavors of implementations of such NNI, for example :
+		<list style="numbers">
+		<t>The NNI is a provider internal NNI between for example of backbone and a DC. There is enough trust between the domains to not filter the VPN routes. So all the VPN routes are exchanged. 
+		Route target filtering may be implemented to save some unnecessary route states.</t>
+		<t>The NNI is used between providers that agreed to exchange VPN routes for specific route-targets only. Each provider is authorized to use the route-target values from the other provider.</t>
+		<t>The NNI is used between providers that agreed to exchange VPN routes for specific route-targets only. Each provider has its own route-target scheme. So a customer spanning the two networks will have different route-target in each network for a particular VPN.</t>
+		</list>
+		</t>
+		<t>Case 1 does not require any service modeling, as the protocol enables dynamic exchange of necessary VPN routes.</t>
+		<t>Case 2 requires to maintain some route-target filtering policy on ASBRs. From a service modeling point of view, it is necessary to agree on the list of route target to authorize.</t>
+		<t>
+		In case 3, both ASes need to agree on the VPN route-target to exchange and in addition how to map a VPN route-target from AS A to the corresponding route-target in AS B (and vice-versa).
+		</t>
+		<t>
+		Those modelings are currently out of scope of this document.
+		</t>
+		<figure>
+		<artwork>
+     Cloud SP                              L3VPN SP B
+           A
+  -----------------                    --------------------
+ /                 \                  /                    \
+|       |           |                |                      |
+|  VM --|       ++++++++  NNI    ++++++++                   |---- VPN1
+|       |       +      +_________+      +                   |     Site#1
+|       |-------+      +         +      +                   |
+|       |       + ASBR +&lt;-mpebgp-&gt;+ ASBR +                   |
+|       |       +      +_________+      +                   |
+|       |       ++++++++         ++++++++                   |
+|  VM --|           |                |                      |---- VPN1
+|       |Virtual    |                |                      |     Site#2
+|       |Network    |                |                      |
+|  VM --|           |                |                      |---- VPN1
+|       |           |                |                      |     Site#3
+ \                 /                 |                      |
+   ----------------                  |                      |  
+                                      \                    /
+	                                   -------------------
+                                                 |
+                                                 |
+                                               VPN1 
+                                              Site#4
+
+		</artwork>
+		</figure>	
+		<t>
+		The example above describes a NNI connection between the service provider network B and a cloud service provider A. Both service providers does not trust themselves and
+		use a different route-target allocation policy. So, in term of implementation, the customer VPN has a different route-target in each network (RT A in CSP A and RT B is CSP B).
+		In order to connect the customer virtual network in CSP A to the customer IPVPN (VPN1) in SP B network, CSP A should request SP B to open the customer VPN on the NNI (accept the appropriate RT).
+		Who does the RT translation is up to an agreement between the two service providers : SP B may permit CSP A to request VPN (RT) translation. 
+		</t>
+		</section>
+		<section anchor="interas-c" title="Defining NNI with option C flavor">
+		<figure>
+		<artwork>
+        AS A                                             AS B
+  ---------------------                         --------------------
+ /                     \                       /                    \
+|                       |                     |                      |
+|                       |                     |                      |
+|                       |                     |                      |
+|                   ++++++++ Multihop ebgp++++++++                   |
+|                   +      +              +      +                   |
+|                   +      +              +      +                   |
+|                   + RGW  +&lt;---mpebgp---&gt;+ RGW  +                   |
+|                   +      +              +      +                   |
+|                   +      +              +      +                   |
+|                   ++++++++              ++++++++                   |
+|                       |                     |                      |
+|                       |                     |                      |
+|                       |                     |                      |
+|                       |                     |                      |
+|                       |                     |                      |
+|                   ++++++++ InterAS link ++++++++                   |
+|                   +      +_____________ +      +                   |
+|                   +      +              +      +                   |
+|                   + ASBR +              + ASBR +                   |
+|                   +      +              +      +                   |
+|                   +      +______________+      +                   |
+|                   ++++++++              ++++++++                   |
+|                       |                     |                      |
+|                       |                     |                      |
+|                       |                     |                      |
+|                   ++++++++ InterAS link ++++++++                   |
+|                   +      +_____________ +      +                   |
+|                   +      +              +      +                   |
+|                   + ASBR +              + ASBR +                   |
+|                   +      +              +      +                   |
+|                   +      +______________+      +                   |
+|                   ++++++++              ++++++++                   |
+|                       |                     |                      |
+|                       |                     |                      |
+ \                     /                       \                    /
+   --------------------                          -------------------
+
+		</artwork>
+		</figure>
+		<t>
+		From a VPN service perspective, option C NNI is very similar to option B as a MP-BGP session is used to exchange VPN routes between the ASes.
+		The difference is that the forwarding and control plane are separated on different nodes, so the MP-BGP is multi-hop between routing gateway (RGW) nodes.
+		</t>
+		<t>
+		Modeling option B and C will be identical from a VPN service point of view.
+		</t>
+		</section>
+	  </section>
+	</section>
+      
+	<section anchor="usage" title="Service model usage example">
+	<t>
+	As explained in <xref target="howto"/>, this service model is intended to be instantiated at a management layer and is not intended to be used
+	directly on network elements. The management system serves as a central point of configuration of the overall service.
+	</t>
+	<t>This section provides an example on how a management system can use this model to configure an IPVPN service on network elements.</t>
+	<t>The example wants to achieve the provisionning of a VPN service for 3 sites using hub and spoke topology. One of the site will be dual homed and loadsharing is expected.</t>
+	
+	<figure>
+	<artwork>
++-------------------------------------------------------------+
+|   Hub_Site  ------ PE1               PE2 ------ Spoke_Site1 |
+|      |                   +----------------------------------+   
+|      |                   |                           
+|      |                   +----------------------------------+                  
+|   Hub_Site  ------ PE3               PE4 ------ Spoke_Site2 |
++-------------------------------------------------------------+
+	</artwork>
+	</figure>
+	<t>
+	The following XML describes the overall simplified service configuration of this VPN.
+	</t>
+	<figure>
+	<artwork>
+&lt;vpn-svc&gt;
+	&lt;vpn-id&gt;12456487&lt;/vpn-id&gt;
+	&lt;customer-name&gt;CUSTOMER1&lt;/customer-name&gt;
+	&lt;topology&gt;hub-spoke&lt;/topology&gt;
+&lt;/vpn-svc&gt;
+	</artwork>
+	</figure>
+	<t>
+	When receiving the request for provisioning the VPN service, the management system will internally (or through discussion with other OSS component) allocates
+	VPN route-targets. In this specific case two RTs will be allocated (100:1 for Hub and 100:2 for Spoke). The output below describes the configuration of Spoke1.
+	</t>
+	<figure>
+	<artwork>
+&lt;site&gt;
+	&lt;site-id&gt;Spoke_Site1&lt;/site-id&gt;
+	&lt;location&gt;
+		&lt;city-code&gt;NY&lt;/city-code&gt;
+		&lt;country-code&gt;US&lt;/country-code&gt;
+	&lt;/location&gt;
+	&lt;routing-protocols&gt;
+	  &lt;routing-protocol&gt;
+		&lt;type&gt;bgp&lt;/type&gt;
+		&lt;bgp&gt;
+			&lt;autonomous-system&gt;500&lt;/autonomous-system&gt;
+			&lt;address-family&gt;ipv4&lt;/address-family&gt;
+			&lt;address-family&gt;ipv6&lt;/address-family&gt;
+		&lt;/bgp&gt;
+	  &lt;/routing-protocol&gt;
+	&lt;/routing-protocols&gt;
+	&lt;site-network-accesses&gt;
+	    &lt;site-network-access&gt;
+		    &lt;site-network-access-id&gt;Spoke_Site1&lt;/site-network-access-id&gt;
+			   &lt;access-diversity&gt;
+				&lt;groups&gt;
+				 &lt;group&gt;
+				  &lt;group-id&gt;20&lt;/group-id&gt;
+				 &lt;/group&gt;
+				&lt;/groups&gt;
+				&lt;constraints&gt;
+				 &lt;constraint&gt;
+				  &lt;constraint-type&gt;pe-diverse&lt;/constraint-type&gt;
+				  &lt;target&gt;
+				   &lt;group&gt;
+					&lt;group-id&gt;10&lt;/group-id&gt;
+				   &lt;/group&gt;
+				  &lt;/target&gt;
+				 &lt;/constraint&gt;
+				&lt;/constraints&gt;
+			   &lt;/access-diversity&gt;
+			&lt;ip-connection&gt;
+				&lt;ipv4&gt;
+					&lt;address-allocation-type&gt;static-address&lt;/address-allocation-type&gt;
+					&lt;addresses&gt;
+					  &lt;provider-address&gt;203.0.113.254&lt;/provider-address&gt;
+					  &lt;customer-address&gt;203.0.113.2&lt;/customer-address&gt;
+					  &lt;mask&gt;24&lt;/mask&gt;
+					&lt;/addresses&gt;
+				&lt;/ipv4&gt;
+				&lt;ipv6&gt;
+					&lt;address-allocation-type&gt;static-address&lt;/address-allocation-type&gt;
+					&lt;addresses&gt;
+					  &lt;provider-address&gt;2001:db8::1&lt;/provider-address&gt;
+					  &lt;customer-address&gt;2001:db8::2&lt;/customer-address&gt;
+					  &lt;mask&gt;64&lt;/mask&gt;
+					&lt;/addresses&gt;
+				&lt;/ipv6&gt;
+			&lt;/ip-connection&gt;
+			&lt;vpn-attachment&gt;
+				&lt;vpn-id&gt;12456487&lt;/vpn-id&gt;
+				&lt;site-role&gt;spoke-role&lt;/site-role&gt;
+			&lt;/vpn-attachment&gt;
+		&lt;/site-network-access&gt;
+	&lt;/site-network-accesses&gt;
+	&lt;management&gt;
+		&lt;type&gt;provider-managed&lt;/type&gt;
+	&lt;/management&gt;
+	&lt;service&gt;
+		&lt;svc-input-bandwidth&gt;450000000&lt;/svc-input-bandwidth&gt;
+		&lt;svc-output-bandwidth&gt;450000000&lt;/svc-output-bandwidth&gt;
+	&lt;/service&gt;
+
+	
+&lt;/site&gt;
+	</artwork>
+	</figure>
+	<t>
+	When receiving the request for provisioning Spoke1 site, the management system MUST allocate network resources for this site. It MUST first decide
+	the target network elements to provision the access, and especially the PE router (and may be an aggregation switch).
+	As described in <xref target="site-location-prov"/>, the management system SHOULD use the location information and SHOULD use the access-diversity constraint to find the appropriate PE.
+	In this case, we consider Spoke1 requires PE diversity with Hub and that management system allocate PEs based on lowest distance. Based on the location information, the management
+	system finds the available PEs in the nearest area of the customer and picks one that fits the access-diversity constraint.
+	</t>
+	<t>
+	When the PE is chosen, management system needs to allocate interface resources on the node, one interface is so picked from the PE available pool.
+	The management system can start provisioning the PE node by using any mean (Netconf, CLI, ...). The management system will check if a VRF is already present that fits the needs.
+	If not, it will provision the VRF : Route distinguisher will come from internal allocation policy model, route-targets are coming from the vpn-policy configuration of the site (management system allocated some RTs for the VPN).
+	As the site is a spoke site (site-role), the management system knows which RT must be imported and exported. As the site is provider managed, some management route-targets may also be added (100:5000).	
+	Standard provider VPN policies MAY also be added in the configuration.
+	<figure>
+	<artwork>
+Example of generated PE configuration :
+
+ip vrf Customer1
+ export-map STD-CUSTOMER-EXPORT      &lt;---- Standard SP configuration
+ route-distinguisher 100:3123234324
+ route-target import 100:1
+ route-target import 100:5000        &lt;---- Standard SP configuration
+ route-target export 100:2                    for provider managed
+!
+	</artwork>
+	</figure>
+	</t>
+	<t>
+	When the VRF has been provisioned, the management system can start configuring the access on the PE using the allocated interface information. 
+	IP addressing is chosen by the management system. One address will be picked from an allocated subnet for the PE, another will be used for the CE configuration.  
+	Routing protocols will also be configured between PE and CE and due to provider managed model, the choice is up to service provider : BGP was chosen for the example.  
+	This choice is independant of the routing protocol chosen by customer.  For the CE - LAN part, bgp will be used as requested in the service model.  
+	Peering addresses will be derived from those of the connection.
+    As CE is provider managed, CE AS number can be automatically allocated by the management system.
+	Some provider standard configuration templates may also be added.
+	</t>
+	<figure>
+	<artwork>
+Example of generated PE configuration :
+
+interface Ethernet1/1/0.10
+ encapsulation dot1q 10
+ ip vrf forwarding Customer1 
+ ip address 198.51.100.1 255.255.255.252 &lt;---- Comes from 
+                                                 automated allocation
+ ipv6 address 2001:db8::10:1/64
+ ip access-group STD-PROTECT-IN     &lt;---- Standard SP config
+!
+router bgp 100
+ address-family ipv4 vrf Customer1
+  neighbor 198.51.100.2 remote-as 65000   &lt;---- Comes from 
+                                              automated allocation
+  neighbor 198.51.100.2 route-map STD in  &lt;---- Standard SP config
+  neighbor 198.51.100.2 filter-list 10 in &lt;---- Standard SP config
+!
+ address-family ipv6 vrf Customer1
+  neighbor 2001:db8::0A10:2 remote-as 65000   &lt;---- Comes from 
+                                              automated allocation
+  neighbor 2001:db8::0A10:2 route-map STD in  &lt;---- Standard SP config
+  neighbor 2001:db8::0A10:2 filter-list 10 in &lt;---- Standard SP config
+!
+ip route vrf Customer1 192.0.2.1 255.255.255.255 198.51.100.2
+! Static route for provider administration of CE
+!
+	</artwork>
+	</figure>
+	<t>
+	As the CE router is not reachable at this stage, the management system can produce a complete CE configuration that can be uploaded to the node by manual operation before sending the CE to customer premise.
+	The CE configuration will be built as for the PE. Based on the CE type (vendor/model) allocated to the customer and bearer information, the management system knows which interface must be configured on the CE.
+	PE-CE link configuration is expected to be handled automatically using the service provider OSS as both resources are managed internally.
+	
+	CE to LAN interface parameters like IP addressing are derived from ip-connection taking into account how management system distributes addresses between PE and CE within the subnet.
+	This will allow to produce a plug'n'play configuration for the CE.
+	</t>
+	<figure>
+	<artwork>
+Example of generated CE configuration :
+
+interface Loopback10
+ description "Administration"
+ ip address 192.0.2.1 255.255.255.255
+!
+interface FastEthernet10
+ description "WAN"
+ ip address 198.51.100.2 255.255.255.252 &lt;---- Comes from 
+                                                automated allocation
+ ipv6 address 2001:db8::0A10:2/64
+!
+interface FastEthernet11
+ description "LAN"
+ ip address 203.0.113.254 255.255.255.0 &lt;---- Comes from
+                                          ip-connection
+ ipv6 address 2001:db8::1/64
+!
+router bgp 65000
+ address-family ipv4
+  redistribute static route-map STATIC2BGP &lt;---- Standard SP 
+                                                    configuration
+  neighbor 198.51.100.1 remote-as 100     &lt;---- Comes from 
+                                              automated allocation
+  neighbor 203.0.113.2 remote-as 500     &lt;---- Comes from 
+                                              ip-connection
+ address-family ipv6
+  redistribute static route-map STATIC2BGP &lt;---- Standard SP 
+                                                    configuration
+  neighbor 2001:db8::0A10:1 remote-as 100     &lt;---- Comes from 
+                                              automated allocation
+  neighbor 2001:db8::2 remote-as 500     &lt;---- Comes from 
+                                              ip-connection
+!
+route-map STATIC2BGP permit 10
+ match tag 10
+!
+
+	</artwork>
+	</figure>
+    </section>
+	
+    <section anchor="interaction" title="Interaction with Other YANG Modules">
+	<t>As expressed in <xref target="howto"/>, this service module is intended to be instantiated in management system and not directly on network elements.</t>
+	<t>It will be the role of the management system to configure the network elements. The management system MAY be modular, 
+	so the component instantiating the service model (let's call it service component) and the component responsible for network element configuration (let's call it configuration component) MAY be different.
+	</t>
+	<figure>
+	<artwork>
+	     L3VPN-SVC         |         
+	       service model   |
+		                   |
+                +----------------------+ 
+                |   Service component  | service datastore
+                +----------------------+ 
+				           | 
+						   |
+				+----------------------+ 
+           +----|   Config component   |-------+ 
+          /     +----------------------+        \   Network
+         /            /            \             \  Configuration 
+		/		     /              \             \ models       
+       /            /                \             \
++++++++         ++++++++             ++++++++       +++++++
++ CEA + ------- + PE A +             + PE B + ----- + CEB + Config
++++++++         ++++++++             ++++++++       +++++++ datastore
+
+Site A                                       Site B
+	</artwork>
+	</figure>
+	<t>
+	In the previous sections, we provided some example of translation of service provisioning request to router configuration lines as illustration.
+	In the NetConf/Yang ecosystem, it will be expected NetConf/YANG to be used between configuration component and network elements to configure the
+	requested service on these elements.
+	</t>
+	<t>
+	In this framework, it is expected from standardization to also work on specific configuration YANG modelization of service components on network elements.
+	There will be so a strong relation between the abstracted view provided by this service model and the detailed configuration view that will be provided by specific
+	configuration models for network elements.
+	</t>
+	<t>Authors of this document are expecting definition of YANG models for network elements on this non exhaustive list of items :
+	<list style="symbols">
+	<t>VRF definition including VPN policy expression.</t>
+	<t>Physical interface.</t>
+	<t>IP layer (IPv4, IPv6).</t>
+	<t>QoS : classification, profiles...</t>
+	<t>Routing protocols : support of configuration of all protocols listed in the document, as well as routing policies associated with these protocols.</t>
+	<t>Multicast VPN.</t>
+	<t>Network Address Translation.</t>
+	<t>...</t>
+	</list>
+	</t>
+	<t>
+	Example of VPN site request at service level using this model :
+	</t>
+	<figure>
+	<artwork>
+&lt;site&gt;
+ &lt;site-id&gt;Site A&lt;/site-id&gt;
+ &lt;site-network-accesses&gt;
+  &lt;site-network-access&gt;
+   &lt;ip-connection&gt;
+    &lt;ipv4&gt;
+     &lt;address-allocation-type&gt;static-address&lt;/address-allocation-type&gt;
+     &lt;addresses&gt;
+      &lt;provider-address&gt;203.0.113.254&lt;/provider-address&gt;
+      &lt;customer-address&gt;203.0.113.2&lt;/customer-address&gt;
+      &lt;mask&gt;24&lt;/mask&gt;
+     &lt;/addresses&gt;
+    &lt;/ipv4&gt;
+   &lt;/ip-connection&gt;
+   &lt;vpn-attachment&gt;
+    &lt;vpn-policy-id&gt;VPNPOL1&lt;/vpn-policy-id&gt;
+   &lt;/vpn-attachment&gt;
+  &lt;/site-network-access&gt;
+ &lt;/site-network-accesses&gt;
+ &lt;routing-protocols&gt;
+  &lt;routing-protocol&gt;
+   &lt;type&gt;static&lt;/type&gt;
+   &lt;static&gt;
+    &lt;cascaded-lan-prefixes&gt;
+     &lt;ipv4-lan-prefixes&gt;
+	  &lt;lan&gt;198.51.100.0/30&lt;/lan&gt;
+	  &lt;next-hop&gt;203.0.113.2&lt;/next-hop&gt;
+	 &lt;/ipv4-lan-prefixes&gt;
+    &lt;/cascaded-lan-prefixes&gt;
+   &lt;/static&gt;
+  &lt;/routing-protocol&gt;
+ &lt;/routing-protocols&gt;
+ &lt;management&gt;
+  &lt;type&gt;customer-managed&lt;/type&gt;
+ &lt;/management&gt;
+ &lt;vpn-policy-list&gt;
+  &lt;vpn-policy&gt;
+    &lt;vpn-policy-id&gt;VPNPOL1&lt;/vpn-policy-id&gt;
+	&lt;entries&gt;
+		&lt;id&gt;1&lt;/id&gt;
+		&lt;vpn&gt;
+			&lt;vpn-id&gt;VPN1&lt;/vpn-id&gt;
+			&lt;site-role&gt;any-to-any-role&lt;/site-role&gt;
+		&lt;/vpn&gt;
+	&lt;/entries&gt;
+  &lt;/vpn-policy&gt;
+ &lt;/vpn-policy-list&gt;
+&lt;/site&gt;
+   </artwork>
+	  </figure>
+	  
+	<t>
+	In the service example above, it is expected that the service component requests to the configuration component of the management system the configuration of the service elements.
+	If we consider that service component selected a PE (PE A) as target PE for the site, the configuration component will need to push the configuration to PE A.
+	The configuration component will use several YANG data models to define the configuration to be applied to PE A. The XML configuration of PE-A may look like this :
+	</t>
+	<figure>
+	<artwork>
+&lt;if:interfaces&gt;
+     &lt;if:interface&gt;
+      &lt;if:name&gt;eth0&lt;/if:name&gt;
+      &lt;if:type&gt;ianaift:ethernetCsmacd&lt;/if:type&gt;
+      &lt;if:description&gt;
+       Link to CEA.
+      &lt;/if:description&gt;
+      &lt;ip:ipv4&gt;
+       &lt;ip:address&gt;
+        &lt;ip:ip&gt;203.0.113.254&lt;/ip:ip&gt;
+        &lt;ip:prefix-length&gt;24&lt;/ip:prefix-length&gt;
+       &lt;/ip:address&gt;
+       &lt;ip:forwarding&gt;true&lt;/ip:forwarding&gt;
+      &lt;/ip:ipv4&gt;
+     &lt;/if:interface&gt;
+&lt;/if:interfaces&gt;
+&lt;rt:routing&gt;
+     &lt;rt:routing-instance&gt;
+      &lt;rt:name&gt;VRF_CustA&lt;/rt:name&gt;
+	  &lt;rt:type&gt;l3vpn:vrf&lt;/rt:type&gt;
+      &lt;rt:description&gt;VRF for CustomerA&lt;/rt:description&gt;
+	  &lt;l3vpn:route-distinguisher&gt;
+	  100:1546542343
+	  &lt;/l3vpn:route-distinguisher&gt;
+	  &lt;l3vpn:import-rt&gt;100:1&lt;/l3vpn:import-rt&gt;
+	  &lt;l3vpn:export-rt&gt;100:1&lt;/l3vpn:export-rt&gt;
+      &lt;rt:interfaces&gt;
+       &lt;rt:interface&gt;
+        &lt;rt:name&gt;eth0&lt;/rt:name&gt;
+       &lt;/rt:interface&gt;
+      &lt;/rt:interfaces&gt;
+      &lt;rt:routing-protocols&gt;
+       &lt;rt:routing-protocol&gt;
+        &lt;rt:type&gt;rt:static&lt;/rt:type&gt;
+        &lt;rt:name&gt;st0&lt;/rt:name&gt;
+        &lt;rt:static-routes&gt;
+         &lt;v4ur:ipv4&gt;
+          &lt;v4ur:route&gt;
+           &lt;v4ur:destination-prefix&gt;
+		   198.51.100.0/30
+		   &lt;/v4ur:destination-prefix&gt;
+           &lt;v4ur:next-hop&gt;
+			&lt;v4ur:next-hop-address&gt;
+			203.0.113.2
+			&lt;/v4ur:next-hop-address&gt;
+		   &lt;/v4ur:next-hop&gt;
+          &lt;/v4ur:route&gt;
+         &lt;/v4ur:ipv4&gt;
+        &lt;/rt:static-routes&gt;
+       &lt;/rt:routing-protocol&gt;
+      &lt;/rt:routing-protocols&gt;
+     &lt;/rt:routing-instance&gt;
+&lt;/rt:routing&gt;
+	
+	</artwork>
+	</figure>
+
+	
+    </section>
+
+    <section anchor="yang" title="YANG Module">
+
+      <figure>
+	&ietf-l3vpn-svc.yang;
+      </figure>
+
+    </section>
+	
+    <section anchor="Security" title="Security Considerations">
+      <t>The YANG modules defined in this document MAY be accessed via the RESTCONF protocol <xref target="I-D.ietf-netconf-restconf"/> or NETCONF protocol (<xref target="RFC6241"/>. The lowest RESTCONF or NETCONF layer requires that the transport-layer protocol provides both data integrity and confidentiality, see Section 2 in <xref target="I-D.ietf-netconf-restconf"/> and <xref target="RFC6241"/>. 
+	  The client MUST carefully examine the certificate presented by the server to determine if it meets the client's expectations, and the server MUST authenticate client access to any protected resource. The client identity derived from the authentication mechanism used is subject to the NETCONF Access Control Module (NACM) (<xref target="RFC6536"/>).
+Other protocols to access this YANG module are also required to support the similar mechanism.
+</t>
+	<t>
+The data nodes defined in the "ietf-l3vpn-svc" YANG module MUST be carefully created/read/updated/deleted. The entries in the lists below include customer proprietary or confidential information, therefore only authorized clients MUST access the information and the other clients MUST NOT be able to access to the information.
+
+<list style="symbols">
+   <t>/l3vpn-svc/vpn-services/vpn-svc</t>
+   <t>/l3vpn-svc/sites/site</t>
+</list>
+</t>
+    </section>
+	
+    <section anchor="Acknowledgements" title="Acknowledgements">
+      <t>Thanks to Qin Wu, Maxim Klyus, Luis Miguel Contreras, Gregory Mirsky,
+   Zitao Wang, Jing Zhao, Kireeti Kompella, Eric Rosen, Aijun Wang, Michael Scharf, Xufeng Liu, David Ball, Lucy yong, Jean-Philippe Landry and Andrew Leu for the contributions to the
+   document. 
+</t>
+    </section>
+
+    <section anchor="IANA" title="IANA Considerations">
+	<t>The IANA is requested to assign a new URI from the
+   IETF XML registry (<xref target="RFC3688"/>). Authors are suggesting the following URI : </t>
+   <figure>
+   <artwork>
+	URI: urn:ietf:params:xml:ns:yang:ietf-l3vpn-svc
+	Registrant Contact: L3SM WG
+	XML: N/A, the requested URI is an XML namespace
+   </artwork>
+   </figure>
+	<t>This document also requests a new YANG module name in the YANG Module Names registry (<xref target="RFC6020"/>) with the following suggestion :</t>
+   <figure>
+   <artwork>
+	name: ietf-l3vpn-svc
+	namespace: urn:ietf:params:xml:ns:yang:ietf-l3vpn-svc
+	prefix: l3vpn-svc
+	reference: RFC XXXX
+   </artwork>
+   </figure>
+   
+    </section>
+
+  </middle>
+  <back>
+    <references title="Normative References">
+      &RFC2119;
+      &RFC6020;
+	  &RFC4577;
+	  &RFC3688;
+	  &RFC4862;
+	  &RFC4364;
+	  &RFC6241;
+	  &RFC6513;
+    </references>
+	    <references title="Informative References">
+		&RFC4110;
+		&RFC6536;
+		&RESTCONF;
+		</references>
+
+  </back>
+</rfc>
